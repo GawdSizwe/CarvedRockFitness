@@ -1,0 +1,194 @@
+###############################################################################
+# CarvedRock Fitness API - HTTP Request Collection
+# Use with VS Code REST Client extension or Visual Studio .http file support
+###############################################################################
+
+@baseUrl = https://localhost:7009
+@contentType = application/json
+
+# JWT Token for user 4 (Emily Davis - Trainee with trainer 2)
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IjQiLCJzdWIiOiI0IiwianRpIjoiYzMyMmJlMDIiLCJhdWQiOiJjYXJ2ZWRmaXRuZXNzYXBpIiwibmJmIjoxNzY4NDMwMjM3LCJleHAiOjE3NzYyMDYyMzcsImlhdCI6MTc2ODQzMDI0MywiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.Ty3P_Cug6RtE1FB_616SxiADTZb7u12RG1SrRJMjcwQ
+
+###############################################################################
+# SWAGGER / API DOCUMENTATION
+###############################################################################
+
+### Access Swagger UI (open in browser)
+# Navigate to: https://localhost:7009/
+
+### Get OpenAPI Specification
+GET {{baseUrl}}/swagger/v1/swagger.json
+Accept: {{contentType}}
+
+###############################################################################
+# USERS ENDPOINTS
+###############################################################################
+
+### Get All Users
+# Returns all users with their trainer information
+GET {{baseUrl}}/users
+Accept: {{contentType}}
+
+###
+
+### Get User by ID (existing user)
+GET {{baseUrl}}/users/1
+Accept: {{contentType}}
+
+###
+
+### Get User by ID (with trainer relationship)
+# User 4 is Emily Davis, trained by Jane Smith (user 2)
+GET {{baseUrl}}/users/4
+Accept: {{contentType}}
+
+###
+
+### Get User by ID (non-existing - should return 404)
+GET {{baseUrl}}/users/99999
+Accept: {{contentType}}
+
+###
+
+### Create New User (Trainee)
+POST {{baseUrl}}/users
+Content-Type: {{contentType}}
+
+{
+    "name": "New Test User",
+    "email": "newuser@carvedrockfitness.com",
+    "role": "Trainee",
+    "trainerId": 2
+}
+
+###
+
+### Create New User (Trainer - no trainerId)
+POST {{baseUrl}}/users
+Content-Type: {{contentType}}
+
+{
+    "name": "New Trainer",
+    "email": "newtrainer@carvedrockfitness.com",
+    "role": "Trainer",
+    "trainerId": null
+}
+
+###
+
+### Create User with Invalid Data (validation test)
+POST {{baseUrl}}/users
+Content-Type: {{contentType}}
+
+{
+    "name": "",
+    "email": "invalid-email",
+    "role": ""
+}
+
+###
+
+### Update User
+# Replace {id} with actual user ID
+PUT {{baseUrl}}/users/11
+Content-Type: {{contentType}}
+
+{
+    "name": "Updated User Name",
+    "email": "updated@carvedrockfitness.com",
+    "role": "Trainer",
+    "trainerId": null
+}
+
+###
+
+### Update Non-Existing User (should return 404)
+PUT {{baseUrl}}/users/99999
+Content-Type: {{contentType}}
+
+{
+    "name": "Ghost User",
+    "email": "ghost@carvedrockfitness.com",
+    "role": "Trainee",
+    "trainerId": null
+}
+
+###
+
+### Delete User
+# Replace {id} with actual user ID to delete
+DELETE {{baseUrl}}/users/11
+Accept: {{contentType}}
+
+###
+
+### Delete Non-Existing User (should return 404)
+DELETE {{baseUrl}}/users/99999
+Accept: {{contentType}}
+
+###############################################################################
+# ROUTINES ENDPOINTS (Requires Authentication)
+###############################################################################
+
+### Get Routine by ID (owned by user - should succeed)
+# User 4 owns routine 1 "Morning Yoga"
+GET {{baseUrl}}/routines/1
+Accept: {{contentType}}
+Authorization: {{token}}
+
+###
+
+### Get Routine by ID (owned by user - another routine)
+# User 4 also owns routine 8 "Lower Body Strength"
+GET {{baseUrl}}/routines/8
+Accept: {{contentType}}
+Authorization: {{token}}
+
+###
+
+### Get Routine by ID (NOT owned by user - should return 403)
+# User 4 does NOT own routine 2 (owned by user 5)
+GET {{baseUrl}}/routines/2
+Accept: {{contentType}}
+Authorization: {{token}}
+
+###
+
+### Get Routine without Authorization (should return 401)
+GET {{baseUrl}}/routines/1
+Accept: {{contentType}}
+
+###
+
+### Get Non-Existing Routine (should return 404)
+GET {{baseUrl}}/routines/99999
+Accept: {{contentType}}
+Authorization: {{token}}
+
+###############################################################################
+# ERROR HANDLING TESTS
+###############################################################################
+
+### Test 404 Not Found Response Format
+GET {{baseUrl}}/users/99999
+Accept: {{contentType}}
+
+###
+
+### Test Invalid Endpoint (404)
+GET {{baseUrl}}/invalid-endpoint
+Accept: {{contentType}}
+
+###############################################################################
+# HEALTH CHECK / SMOKE TESTS
+###############################################################################
+
+### Quick health check - Get all users
+GET {{baseUrl}}/users
+Accept: {{contentType}}
+
+###
+
+### Verify Swagger is available
+GET {{baseUrl}}/swagger/v1/swagger.json
+Accept: {{contentType}}
