@@ -1,0 +1,66 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Something went wrong";
+}
+
+<div class="container py-5" style="max-width:640px">
+
+    <div class="text-center mb-5">
+        <div style="font-size:5rem;line-height:1">⚠️</div>
+        <h1 class="fw-black mt-3 mb-2" style="font-size:2rem;color:var(--text-1)">
+            Oops — something went wrong
+        </h1>
+        <p class="text-muted" style="font-size:1.05rem">
+            Our team has been notified and is working on a fix.<br/>
+            This is a <strong>developer issue</strong> — not your fault at all.
+        </p>
+    </div>
+
+    <div class="gym-detail-card mb-4 text-center">
+        <i class="bi bi-tools" style="font-size:2rem;color:var(--gym-orange)"></i>
+        <h5 class="fw-bold mt-3 mb-2" style="color:var(--text-1)">We're fixing it now</h5>
+        <p class="text-muted small mb-0">
+            The error has been logged. Please try again in a few minutes.
+            In the meantime you can go back to the home feed — it's probably still working fine.
+        </p>
+    </div>
+
+    <div class="d-flex flex-column flex-sm-row gap-3 mb-5">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-gym btn-lg flex-grow-1">
+            <i class="bi bi-house-fill me-2"></i>Back to Feed
+        </a>
+        <a asp-controller="Academy" asp-action="Index" class="btn btn-gym-dark btn-lg flex-grow-1">
+            <i class="bi bi-shield-fill-check me-2"></i>YVEDA Academy
+        </a>
+    </div>
+
+    <div class="gym-detail-card">
+        <h6 class="fw-bold mb-3" style="color:var(--text-1)">
+            <i class="bi bi-headset me-2" style="color:var(--gym-orange)"></i>Contact Support
+        </h6>
+        <p class="text-muted small mb-3">
+            If this keeps happening, please reach out and we'll sort it out quickly.
+        </p>
+        <div class="d-flex flex-column gap-2" style="font-size:.9rem">
+            <a href="https://wa.me/27000000000?text=Hi%2C+I'm+getting+an+error+on+Sport+%26+Health+Meetups+SA"
+               class="d-flex align-items-center gap-2 text-decoration-none" style="color:var(--text-2)">
+                <i class="bi bi-whatsapp" style="color:#25D366;font-size:1.2rem"></i>
+                <span>WhatsApp Support</span>
+            </a>
+            <a href="mailto:support@sportmeetups.co.za?subject=Error+Report"
+               class="d-flex align-items-center gap-2 text-decoration-none" style="color:var(--text-2)">
+                <i class="bi bi-envelope-fill" style="color:var(--gym-orange);font-size:1.2rem"></i>
+                <span>support@sportmeetups.co.za</span>
+            </a>
+        </div>
+
+        @if (Model?.ShowRequestId == true)
+        {
+            <div class="mt-3 p-2 rounded-2" style="background:var(--gym-surface-2);font-size:.72rem;color:var(--text-3)">
+                <strong>Reference:</strong> <code style="color:var(--text-3)">@Model.RequestId</code>
+                <span class="ms-2">(include this when contacting support)</span>
+            </div>
+        }
+    </div>
+
+</div>

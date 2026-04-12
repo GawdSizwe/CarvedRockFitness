@@ -1,0 +1,147 @@
+@using CarvedRockFitness.Web.Services
+@{
+    ViewData["Title"] = "Checkout";
+    var redirect  = ViewBag.Redirect as PayFastRedirect;
+    var plan      = ViewBag.Plan as string ?? "premium";
+    var isSandbox = (bool)(ViewBag.IsSandbox ?? true);
+    var isAcademy = plan == "academy";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center g-4">
+
+        @* Plan summary *@
+        <div class="col-lg-5 col-xl-4">
+            <div class="gym-payment-card h-100">
+                <div class="text-center mb-4">
+                    <span class="gym-badge @(isAcademy ? "gym-badge-transport" : "gym-badge-crossfit") mb-3 d-inline-flex">
+                        <i class="bi @(isAcademy ? "bi-bus-front-fill" : "bi-lightning-fill")"></i>
+                        @(isAcademy ? "YVEDA TRANSPORT" : "PREMIUM PLAN")
+                    </span>
+                    <div class="gym-payment-amount">@ViewBag.Amount</div>
+                    <p class="text-muted small mb-0">per month &middot; cancel anytime</p>
+                </div>
+
+                <div class="mb-4">
+                    @if (isAcademy)
+                    {
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Daily pickup &amp; drop to <strong>YVEDA Academy</strong></span></div>
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Verified, police-cleared driver</span></div>
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Live <strong>GPS tracking</strong> for parents</span></div>
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Pickup &amp; drop-off <strong>notifications</strong></span></div>
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Emergency contact system</span></div>
+                    }
+                    else
+                    {
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Post <strong>unlimited</strong> sport &amp; health listings</span></div>
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Add contact &amp; booking details</span></div>
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Upload cover images</span></div>
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Priority visibility in the feed</span></div>
+                        <div class="gym-feature-item"><i class="bi bi-check-circle-fill"></i><span>Early access to new features</span></div>
+                    }
+                </div>
+
+                <div class="p-3 rounded-3" style="background:var(--gym-orange-dim);border:1px solid var(--border-o)">
+                    <div class="d-flex align-items-center gap-2" style="font-size:.82rem;color:var(--text-3)">
+                        <i class="bi bi-shield-fill-check" style="color:var(--gym-orange);font-size:1.1rem"></i>
+                        <span>Secured by <strong style="color:var(--text-2)">PayFast</strong> — South Africa's trusted payment gateway</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* PayFast redirect panel *@
+        <div class="col-lg-5 col-xl-4">
+            <div class="gym-payment-card">
+
+                @if (isSandbox)
+                {
+                    <div class="alert alert-warning py-2 mb-4 d-flex align-items-center gap-2" style="font-size:.82rem">
+                        <i class="bi bi-cone-striped" style="color:#f59e0b"></i>
+                        <span><strong>Sandbox mode</strong> — no real money is charged.<br/>
+                        Use PayFast test card: <code>4000000000000002</code></span>
+                    </div>
+                }
+
+                <h5 class="fw-bold mb-3" style="color:var(--text-1)">
+                    <i class="bi bi-credit-card me-2" style="color:var(--gym-orange)"></i>Pay via PayFast
+                </h5>
+                <p class="text-muted small mb-4">
+                    You will be securely redirected to PayFast to complete your payment.
+                    Supports card, EFT, SnapScan, Zapper and more.
+                </p>
+
+                @if (redirect != null)
+                {
+                    <form id="pfForm" action="@redirect.ActionUrl" method="post">
+                        @foreach (var field in redirect.Fields)
+                        {
+                            <input type="hidden" name="@field.Key" value="@field.Value" />
+                        }
+                        <button type="submit" class="btn btn-gym btn-lg w-100 mb-3" id="payBtn">
+                            <i class="bi bi-lock-fill me-2"></i>Pay @ViewBag.Amount via PayFast
+                        </button>
+                    </form>
+
+                    <div id="autoRedirectInfo" class="text-center mb-3" style="font-size:.82rem;color:var(--text-3)">
+                        Redirecting automatically in <strong id="countdown">3</strong>s…
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Payment setup failed. Please <a asp-action="Checkout" asp-route-plan="@plan" class="alert-link">try again</a>.
+                    </div>
+                }
+
+                <div class="text-center">
+                    <a asp-action="Cancel" style="color:var(--text-3);font-size:.85rem;text-decoration:none">
+                        <i class="bi bi-arrow-left me-1"></i>Cancel and go back
+                    </a>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3 mt-4" style="opacity:.45">
+                    <i class="bi bi-lock-fill" style="color:var(--gym-orange)"></i>
+                    <span style="font-size:.72rem;color:var(--text-3)">256-bit SSL</span>
+                    <i class="bi bi-shield-check" style="color:var(--gym-orange)"></i>
+                    <span style="font-size:.72rem;color:var(--text-3)">PCI-DSS compliant</span>
+                    <i class="bi bi-phone-fill" style="color:var(--gym-orange)"></i>
+                    <span style="font-size:.72rem;color:var(--text-3)">Mobile friendly</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var btn = document.getElementById('payBtn');
+            var countdownEl = document.getElementById('countdown');
+            if (!btn) return;
+
+            var seconds = 3;
+
+            function tick() {
+                seconds--;
+                if (countdownEl) countdownEl.textContent = seconds;
+                if (seconds <= 0) {
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Redirecting to PayFast…';
+                    btn.disabled = true;
+                    document.getElementById('pfForm').submit();
+                } else {
+                    setTimeout(tick, 1000);
+                }
+            }
+
+            setTimeout(tick, 1000);
+
+            btn.addEventListener('click', function () {
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Redirecting to PayFast…';
+                this.disabled = true;
+            });
+        })();
+    </script>
+}

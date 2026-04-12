@@ -57,6 +57,15 @@ Thumbs.db
 # User secrets
 secrets.json
 
+# Signing certificates — never commit to source control
+*.pfx
+*.p12
+/certs/
+
+# Uploaded user files
+**/wwwroot/uploads/*
+!**/wwwroot/uploads/.gitkeep
+
 # Application Insights
 ApplicationInsights.config
 

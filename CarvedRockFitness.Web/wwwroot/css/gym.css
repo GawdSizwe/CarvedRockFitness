@@ -1,0 +1,807 @@
+/* ═══════════════════════════════════════════════════════════
+   GYM MEETUPS SA — Premium UI
+   Hybrid: dark SaaS structure + bold fitness energy
+   OS-aware dark / light mode via prefers-color-scheme
+═══════════════════════════════════════════════════════════ */
+
+/* ── Design tokens (dark — default) ── */
+:root {
+    --gym-orange:       #FF6B00;
+    --gym-orange-light: #ff8c38;
+    --gym-orange-dim:   rgba(255,107,0,0.12);
+    --gym-orange-glow:  rgba(255,107,0,0.35);
+
+    --bg:          #0d1117;
+    --bg-card:     #161b22;
+    --bg-card-2:   #1c2128;
+    --bg-overlay:  rgba(13,17,23,0.85);
+    --border:      #21262d;
+    --border-o:    rgba(255,107,0,0.22);
+
+    --text-1:   #e6edf3;
+    --text-2:   #cdd9e5;
+    --text-3:   #8b949e;
+    --text-inv: #0d1117;
+
+    --nav-bg:   rgba(13,17,23,0.82);
+    --nav-blur: saturate(180%) blur(14px);
+
+    --radius:   12px;
+    --radius-lg:18px;
+    --radius-xl:24px;
+    --shadow-card: 0 4px 24px rgba(0,0,0,0.45);
+    --shadow-hover: 0 12px 40px rgba(0,0,0,0.65), 0 0 0 1px var(--border-o);
+    --shadow-btn:   0 6px 20px var(--gym-orange-glow);
+
+    --transition: 0.2s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Light mode overrides ── */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg:          #f6f8fa;
+        --bg-card:     #ffffff;
+        --bg-card-2:   #f0f3f6;
+        --bg-overlay:  rgba(246,248,250,0.92);
+        --border:      #d0d7de;
+        --border-o:    rgba(255,107,0,0.3);
+
+        --text-1:   #1a1f2e;
+        --text-2:   #2d333b;
+        --text-3:   #57606a;
+        --text-inv: #ffffff;
+
+        --nav-bg:   rgba(255,255,255,0.82);
+        --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
+        --shadow-hover: 0 8px 28px rgba(0,0,0,0.14), 0 0 0 1px var(--border-o);
+    }
+    .gym-hero {
+        background: linear-gradient(135deg, #1a1a2e 0%, #2d1200 60%, #0d1117 100%) !important;
+    }
+}
+
+/* ══════════════════════════════
+   BASE
+══════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+
+.gym-body {
+    background-color: var(--bg);
+    color: var(--text-1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    transition: background-color var(--transition), color var(--transition);
+    -webkit-font-smoothing: antialiased;
+}
+
+.text-orange { color: var(--gym-orange) !important; }
+.text-muted   { color: var(--text-3) !important; }
+
+/* ══════════════════════════════
+   GLASS NAVBAR
+══════════════════════════════ */
+.gym-navbar {
+    background: var(--nav-bg) !important;
+    backdrop-filter: var(--nav-blur);
+    -webkit-backdrop-filter: var(--nav-blur);
+    border-bottom: 1px solid var(--border) !important;
+    transition: background var(--transition);
+}
+.gym-brand {
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: 2.5px;
+    color: var(--text-1) !important;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+.gym-brand:hover { color: var(--text-1) !important; }
+
+.gym-nav-link {
+    color: var(--text-2) !important;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.75rem !important;
+    border-radius: 6px;
+    transition: color var(--transition), background var(--transition);
+}
+.gym-nav-link:hover {
+    color: var(--gym-orange) !important;
+    background: var(--gym-orange-dim);
+}
+.gym-nav-link.active {
+    color: var(--gym-orange) !important;
+}
+
+/* Pill sign-in button */
+.btn-gym-outline {
+    border: 1.5px solid var(--gym-orange);
+    color: var(--gym-orange);
+    background: transparent;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all var(--transition);
+    text-decoration: none;
+    padding: 6px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-gym-outline:hover {
+    background: var(--gym-orange);
+    color: #fff;
+    box-shadow: var(--shadow-btn);
+    transform: translateY(-1px);
+}
+
+.gym-dropdown {
+    background-color: var(--bg-card-2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow-card);
+    min-width: 200px;
+}
+.gym-dropdown .dropdown-item {
+    color: var(--text-2) !important;
+    font-size: 0.9rem;
+    padding: 0.55rem 1rem;
+    border-radius: 6px;
+    margin: 2px 4px;
+}
+.gym-dropdown .dropdown-item:hover {
+    background: var(--gym-orange-dim) !important;
+    color: var(--gym-orange) !important;
+}
+.gym-dropdown .dropdown-divider { border-color: var(--border); }
+
+/* ══════════════════════════════
+   BOLD FITNESS HERO
+══════════════════════════════ */
+.gym-hero {
+    background:
+        linear-gradient(160deg, rgba(13,17,23,0.97) 0%, rgba(35,12,0,0.92) 50%, rgba(13,17,23,0.97) 100%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FF6B00' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    border-bottom: 1px solid var(--border-o);
+    padding: 4.5rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+}
+.gym-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+    pointer-events: none;
+}
+.gym-hero h1 {
+    font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    color: #fff;
+}
+.gym-hero p { color: rgba(255,255,255,0.65); }
+
+/* Stats strip */
+.gym-stats-strip {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 0;
+}
+.gym-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-3);
+    font-weight: 500;
+}
+.gym-stat-item strong { color: var(--text-1); font-weight: 700; }
+.gym-stat-sep { color: var(--border); }
+
+/* ══════════════════════════════
+   BUTTONS
+══════════════════════════════ */
+.btn-gym {
+    background: var(--gym-orange);
+    border-color: var(--gym-orange);
+    color: #fff !important;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.55rem 1.6rem;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+.btn-gym:hover {
+    background: var(--gym-orange-light);
+    border-color: var(--gym-orange-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-btn);
+}
+.btn-gym:active { transform: translateY(0); }
+
+.btn-gym-dark {
+    background: var(--bg-card-2);
+    border: 1px solid var(--border);
+    color: var(--text-2) !important;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.55rem 1.6rem;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-gym-dark:hover {
+    border-color: var(--gym-orange);
+    color: var(--gym-orange) !important;
+    background: var(--gym-orange-dim);
+}
+
+.btn-gym.btn-sm, .btn-gym-dark.btn-sm {
+    padding: 0.35rem 1.1rem;
+    font-size: 0.84rem;
+}
+
+/* ══════════════════════════════
+   CARDS
+══════════════════════════════ */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.gym-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    overflow: hidden;
+    height: 100%;
+    box-shadow: var(--shadow-card);
+    animation: fadeInUp 0.35s ease both;
+}
+.gym-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border-o);
+}
+.gym-card .card-img-top {
+    height: 185px;
+    object-fit: cover;
+    background: var(--bg-card-2);
+    transition: transform 0.4s ease;
+}
+.gym-card:hover .card-img-top {
+    transform: scale(1.04);
+}
+.gym-card-img-placeholder {
+    height: 185px;
+    background: linear-gradient(135deg, var(--bg-card-2) 0%, var(--bg-card) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.gym-card-img-placeholder i {
+    color: var(--gym-orange);
+    opacity: 0.6;
+    position: relative;
+    z-index: 1;
+}
+.gym-card .card-body { padding: 1.1rem; }
+.gym-card .card-title {
+    color: var(--text-1);
+    font-weight: 700;
+    font-size: 0.97rem;
+    line-height: 1.35;
+    margin-bottom: 0.4rem;
+}
+.gym-card .card-text {
+    color: var(--text-3);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+.gym-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.78rem;
+    color: var(--text-3);
+    margin-bottom: 0.85rem;
+}
+.gym-card-meta i { color: var(--gym-orange); }
+
+/* Category colour badges */
+.gym-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 3px 10px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    border: 1px solid;
+}
+.gym-badge-hiit       { background: rgba(239,68,68,0.12);   color:#ef4444; border-color:rgba(239,68,68,0.3); }
+.gym-badge-yoga       { background: rgba(20,184,166,0.12);  color:#14b8a6; border-color:rgba(20,184,166,0.3); }
+.gym-badge-strength   { background: rgba(59,130,246,0.12);  color:#3b82f6; border-color:rgba(59,130,246,0.3); }
+.gym-badge-running    { background: rgba(34,197,94,0.12);   color:#22c55e; border-color:rgba(34,197,94,0.3); }
+.gym-badge-boxing     { background: rgba(168,85,247,0.12);  color:#a855f7; border-color:rgba(168,85,247,0.3); }
+.gym-badge-crossfit   { background: rgba(249,115,22,0.12);  color:#f97316; border-color:rgba(249,115,22,0.3); }
+.gym-badge-football   { background: rgba(22,163,74,0.12);   color:#16a34a; border-color:rgba(22,163,74,0.3); }
+.gym-badge-cricket    { background: rgba(217,119,6,0.12);   color:#d97706; border-color:rgba(217,119,6,0.3); }
+.gym-badge-cycling    { background: rgba(37,99,235,0.12);   color:#2563eb; border-color:rgba(37,99,235,0.3); }
+.gym-badge-tennis     { background: rgba(101,163,13,0.12);  color:#65a30d; border-color:rgba(101,163,13,0.3); }
+.gym-badge-swimming   { background: rgba(8,145,178,0.12);   color:#0891b2; border-color:rgba(8,145,178,0.3); }
+.gym-badge-transport  { background: rgba(124,58,237,0.12);  color:#7c3aed; border-color:rgba(124,58,237,0.3); }
+.gym-badge-default    { background: var(--gym-orange-dim);  color:var(--gym-orange); border-color:var(--border-o); }
+
+/* Role badges */
+.gym-role-admin   { background:rgba(250,204,21,0.12); color:#fbbf24; border:1px solid rgba(251,191,36,0.3); border-radius:999px; padding:3px 12px; font-size:0.75rem; font-weight:700; }
+.gym-role-paid    { background:var(--gym-orange-dim); color:var(--gym-orange); border:1px solid var(--border-o); border-radius:999px; padding:3px 12px; font-size:0.75rem; font-weight:700; }
+.gym-role-free    { background:rgba(139,148,158,0.12); color:var(--text-3); border:1px solid var(--border); border-radius:999px; padding:3px 12px; font-size:0.75rem; font-weight:700; }
+
+/* ══════════════════════════════
+   FORMS
+══════════════════════════════ */
+.gym-input {
+    background: var(--bg-card-2) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-1) !important;
+    border-radius: 8px !important;
+    padding: 0.6rem 0.9rem !important;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.gym-input:focus {
+    border-color: var(--gym-orange) !important;
+    box-shadow: 0 0 0 3px rgba(255,107,0,0.18) !important;
+    background: var(--bg-card-2) !important;
+    color: var(--text-1) !important;
+    outline: none;
+}
+.gym-input::placeholder { color: var(--text-3) !important; }
+.gym-label { color: var(--text-2); font-weight: 600; font-size: 0.875rem; margin-bottom: 0.35rem; }
+.gym-select {
+    background: var(--bg-card-2) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-1) !important;
+    border-radius: 8px !important;
+}
+.gym-select option { background: var(--bg-card); }
+
+/* ══════════════════════════════
+   DETAIL / INFO CARDS
+══════════════════════════════ */
+.gym-detail-img {
+    width: 100%;
+    max-height: 440px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+.gym-detail-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+}
+.gym-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 0.93rem;
+    transition: color var(--transition);
+}
+.gym-contact-item:last-child { border-bottom: none; }
+.gym-contact-item:hover { color: var(--gym-orange); }
+.gym-contact-icon {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    background: var(--gym-orange-dim);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gym-orange);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    border: 1px solid var(--border-o);
+}
+
+/* ══════════════════════════════
+   PROFILE CARD
+══════════════════════════════ */
+.gym-avatar {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gym-orange), var(--gym-orange-light));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #fff;
+    margin: 0 auto 1rem;
+    box-shadow: 0 0 0 4px var(--gym-orange-dim);
+    letter-spacing: -1px;
+}
+.gym-profile-stat {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-card-2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+.gym-profile-stat strong { display: block; font-size: 1.5rem; font-weight: 800; color: var(--gym-orange); }
+.gym-profile-stat span   { font-size: 0.78rem; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ══════════════════════════════
+   ADMIN DASHBOARD
+══════════════════════════════ */
+.gym-table { color: var(--text-1); }
+.gym-table thead th {
+    background: var(--bg-card);
+    color: var(--text-3);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-color: var(--border);
+    padding: 0.85rem 1rem;
+}
+.gym-table td { border-color: var(--border); vertical-align: middle; color: var(--text-2); }
+.gym-table tbody tr:hover td { background: var(--bg-card-2); }
+.gym-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    transition: border-color var(--transition);
+}
+.gym-stat-card:hover { border-color: var(--border-o); }
+.gym-stat-number { font-size: 2.2rem; font-weight: 900; color: var(--gym-orange); }
+.gym-stat-label  { font-size: 0.8rem; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ══════════════════════════════
+   PAYMENT
+══════════════════════════════ */
+.gym-payment-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-o);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-card);
+}
+.gym-payment-amount {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--gym-orange);
+    letter-spacing: -2px;
+    line-height: 1;
+}
+.gym-feature-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.55rem 0;
+    color: var(--text-2);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+}
+.gym-feature-item:last-child { border-bottom: none; }
+.gym-feature-item i { color: var(--gym-orange); font-size: 1rem; }
+
+/* ══════════════════════════════
+   EMPTY STATE
+══════════════════════════════ */
+.gym-empty {
+    text-align: center;
+    padding: 5rem 1rem;
+}
+.gym-empty-icon {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--gym-orange-dim);
+    border: 2px solid var(--border-o);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: var(--gym-orange);
+}
+
+/* ══════════════════════════════
+   SECTION HEADING
+══════════════════════════════ */
+.gym-section-head {
+    display: flex; align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.gym-section-head h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-1);
+    margin: 0;
+}
+.gym-section-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gym-orange);
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════
+   FOOTER
+══════════════════════════════ */
+.gym-footer {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+}
+.gym-footer-link {
+    color: var(--text-3);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color var(--transition);
+}
+.gym-footer-link:hover { color: var(--gym-orange); }
+
+/* ══════════════════════════════
+   PAGINATION
+══════════════════════════════ */
+.pagination { gap: 4px; }
+.page-link {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    border-radius: 8px !important;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.875rem;
+    transition: all var(--transition);
+}
+.page-link:hover {
+    background: var(--gym-orange-dim);
+    color: var(--gym-orange);
+    border-color: var(--border-o);
+}
+.page-item.active .page-link {
+    background: var(--gym-orange);
+    border-color: var(--gym-orange);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: var(--shadow-btn);
+}
+.page-item.disabled .page-link {
+    background: var(--bg);
+    border-color: var(--border);
+    color: var(--text-3);
+    opacity: 0.5;
+}
+
+/* ══════════════════════════════
+   INPUT GROUP OVERRIDE
+══════════════════════════════ */
+.input-group-text {
+    background: var(--bg-card-2) !important;
+    border-color: var(--border) !important;
+    color: var(--text-3) !important;
+}
+
+/* ══════════════════════════════
+   ALERT OVERRIDES
+══════════════════════════════ */
+.alert-warning {
+    background: rgba(234,179,8,0.1);
+    border-color: rgba(234,179,8,0.3);
+    color: #fbbf24;
+}
+.alert-success {
+    background: rgba(34,197,94,0.1);
+    border-color: rgba(34,197,94,0.3);
+    color: #4ade80;
+}
+
+/* ══════════════════════════════
+   AD BANNERS
+══════════════════════════════ */
+.gym-ad-banner {
+    position: relative;
+    display: block;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+.gym-ad-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+    text-decoration: none;
+}
+.gym-ad-banner img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+}
+@media (min-width: 576px) {
+    .gym-ad-banner img { height: 100px; }
+}
+@media (min-width: 992px) {
+    .gym-ad-banner img { height: 120px; }
+}
+.gym-ad-banner-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,.7));
+    padding: .5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.gym-ad-label {
+    font-size: .65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--gym-orange);
+    background: rgba(0,0,0,.5);
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.gym-ad-tagline {
+    font-size: .78rem;
+    color: rgba(255,255,255,.9);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Pinned card badge */
+.gym-card { position: relative; }
+.gym-card-pinned-badge {
+    position: absolute;
+    top: .5rem; left: .5rem;
+    z-index: 2;
+    background: var(--gym-orange);
+    color: #fff;
+    font-size: .65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* ══════════════════════════════
+   MOBILE-FIRST RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 575.98px) {
+    /* Larger tap targets */
+    .btn, .btn-gym, .btn-gym-dark, .btn-gym-outline {
+        min-height: 44px;
+        font-size: 0.95rem;
+    }
+    .gym-nav-link { min-height: 44px; display: flex; align-items: center; }
+
+    /* Hero tighter on phones */
+    .gym-hero { padding: 2.5rem 0 2rem; }
+    .gym-hero h1 { font-size: clamp(1.8rem, 8vw, 2.6rem); }
+
+    /* Full-width buttons on small screens */
+    .btn-gym, .btn-gym-dark { width: 100%; justify-content: center; }
+    .gym-hero .d-flex { flex-direction: column; }
+    .gym-hero .d-flex .btn { width: 100%; }
+
+    /* Cards: single column */
+    .gym-card-img-placeholder { height: 160px; }
+    .gym-card .card-img-top { height: 160px; }
+
+    /* Forms: full width, easier to tap */
+    .gym-input, .gym-select { font-size: 1rem !important; min-height: 48px; }
+    .gym-label { font-size: 0.9rem; }
+    .row.g-3 > [class*="col-md"] { flex: 0 0 100%; max-width: 100%; }
+
+    /* Detail cards — less padding */
+    .gym-detail-card { padding: 1.1rem; }
+    .gym-payment-card { padding: 1.25rem; }
+
+    /* Stat cards 2-up */
+    .gym-stat-card { padding: 1rem; }
+    .gym-stat-number { font-size: 1.7rem; }
+
+    /* Pagination — larger links */
+    .page-link { padding: 0.55rem 1rem; font-size: 0.95rem; }
+
+    /* Admin table — scroll horizontal */
+    .gym-table { font-size: 0.82rem; }
+}
+
+@media (max-width: 767.98px) {
+    /* Stats strip scrolls on mobile */
+    .gym-stats-strip .d-flex { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.25rem; }
+    .gym-stats-strip .d-flex::-webkit-scrollbar { height: 3px; }
+
+    /* Footer stacked */
+    .gym-footer .row { text-align: center; }
+    .gym-footer .col-md-4 .d-flex { justify-content: center; }
+    .gym-footer .col-md-3 { text-align: center !important; }
+
+    /* Payment cards stack */
+    .gym-payment-card { padding: 1.5rem; }
+}
+
+/* Bottom mobile nav bar */
+.gym-bottom-nav {
+    display: none;
+}
+@media (max-width: 767.98px) {
+    .gym-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--nav-bg);
+        backdrop-filter: var(--nav-blur);
+        -webkit-backdrop-filter: var(--nav-blur);
+        border-top: 1px solid var(--border);
+        z-index: 1050;
+        padding: 0.4rem 0 calc(0.4rem + env(safe-area-inset-bottom));
+    }
+    .gym-bottom-nav a {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: var(--text-3);
+        text-decoration: none;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 0.25rem 0;
+        transition: color var(--transition);
+        min-height: 44px;
+        justify-content: center;
+    }
+    .gym-bottom-nav a i { font-size: 1.3rem; }
+    .gym-bottom-nav a.active,
+    .gym-bottom-nav a:hover { color: var(--gym-orange); }
+    .gym-bottom-nav a.gym-bottom-post {
+        color: var(--gym-orange);
+    }
+    .gym-bottom-nav a.gym-bottom-post i {
+        background: var(--gym-orange);
+        color: #fff;
+        border-radius: 50%;
+        width: 38px; height: 38px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+        box-shadow: var(--shadow-btn);
+    }
+    /* Push main content above bottom nav */
+    main { padding-bottom: 70px; }
+    /* Hide top navbar links on mobile — bottom nav handles it */
+    .gym-navbar .navbar-collapse { display: none !important; }
+}
+
+/* ══════════════════════════════
+   SCROLLBAR (webkit)
+══════════════════════════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gym-orange); }

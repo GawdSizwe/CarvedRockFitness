@@ -7,7 +7,7 @@
 @contentType = application/json
 
 # JWT Token for user 4 (Emily Davis - Trainee with trainer 2)
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IjQiLCJzdWIiOiI0IiwianRpIjoiYzMyMmJlMDIiLCJhdWQiOiJjYXJ2ZWRmaXRuZXNzYXBpIiwibmJmIjoxNzY4NDMwMjM3LCJleHAiOjE3NzYyMDYyMzcsImlhdCI6MTc2ODQzMDI0MywiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.Ty3P_Cug6RtE1FB_616SxiADTZb7u12RG1SrRJMjcwQ
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IjIiLCJzdWIiOiIyIiwianRpIjoiNzY3MWJhZjEiLCJhdWQiOiJjYXJ2ZWRmaXRuZXNzYXBpIiwibmJmIjoxNzczMTM2Nzg5LCJleHAiOjE3ODEwODU1ODksImlhdCI6MTc3MzEzNjc5MiwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.BnGxJi2bltlbPx7aYVUtZJJ3at10qVtU9_knnHkC_-M
 
 ###############################################################################
 # SWAGGER / API DOCUMENTATION
@@ -139,7 +139,7 @@ Authorization: {{token}}
 ###
 
 ### Get Routine by ID (owned by user - another routine)
-# User 4 also owns routine 8 "Lower Body Strength"
+# Usler 4 also owns routine 8 "Lower Body Strength"
 GET {{baseUrl}}/routines/8
 Accept: {{contentType}}
 Authorization: {{token}}

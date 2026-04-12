@@ -1,0 +1,217 @@
+@model SuggestionDto
+@{
+    ViewData["Title"] = Model.Title;
+    bool hasMap = Model.Latitude.HasValue && Model.Longitude.HasValue;
+    string? waReminderUrl = null;
+    if (Model.EventDate.HasValue)
+    {
+        var evtStr = Model.EventDate.Value.ToString("dddd d MMMM yyyy \a\t HH:mm");
+        var waNum  = Model.ContactDetail?.WhatsApp?.Replace("+","").Replace(" ","") ?? "";
+        var waMsg  = Uri.EscapeDataString($"Hi! Reminder: '{Model.Title}' is on {evtStr} at {Model.Location}. See you there 🏃");
+        waReminderUrl = !string.IsNullOrEmpty(waNum)
+            ? $"https://wa.me/{waNum}?text={waMsg}"
+            : $"https://wa.me/?text={waMsg}";
+    }
+    var categoryIcons = new Dictionary<string, (string icon, string css)>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["HIIT"]      = ("bi-fire",           "gym-badge-hiit"),
+        ["Yoga"]      = ("bi-peace",          "gym-badge-yoga"),
+        ["Strength"]  = ("bi-trophy-fill",    "gym-badge-strength"),
+        ["Running"]   = ("bi-person-walking", "gym-badge-running"),
+        ["Boxing"]    = ("bi-shield-fill",    "gym-badge-boxing"),
+        ["CrossFit"]  = ("bi-lightning-fill", "gym-badge-crossfit"),
+    };
+    var cat = Model.Category ?? "default";
+    var (icon, badgeCss) = categoryIcons.TryGetValue(cat, out var ci)
+        ? ci : ("bi-activity", "gym-badge-default");
+    bool hasContact = Model.ContactDetail != null &&
+        (!string.IsNullOrEmpty(Model.ContactDetail.Phone)      ||
+         !string.IsNullOrEmpty(Model.ContactDetail.Email)      ||
+         !string.IsNullOrEmpty(Model.ContactDetail.WhatsApp)   ||
+         !string.IsNullOrEmpty(Model.ContactDetail.BookingUrl));
+}
+
+@section Head {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb" style="background:none;padding:0;font-size:.85rem">
+            <li class="breadcrumb-item">
+                <a asp-controller="Home" asp-action="Index" style="color:var(--text-3);text-decoration:none">
+                    <i class="bi bi-house-fill me-1"></i>Feed
+                </a>
+            </li>
+            <li class="breadcrumb-item active" style="color:var(--text-3)" aria-current="page">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            @if (!string.IsNullOrEmpty(Model.ImagePath))
+            {
+                <img src="@Model.ImagePath" class="gym-detail-img mb-4" alt="@Model.Title" />
+            }
+            else
+            {
+                <div class="gym-card-img-placeholder rounded-4 mb-4" style="height:280px">
+                    <i class="bi @icon" style="font-size:4rem"></i>
+                </div>
+            }
+
+            <div class="gym-detail-card">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="gym-badge @badgeCss"><i class="bi @icon"></i>@Model.Category</span>
+                        <span style="color:var(--text-3);font-size:.8rem">
+                            <i class="bi bi-calendar3 me-1" style="color:var(--gym-orange)"></i>@Model.CreatedAt.ToString("dd MMM yyyy")
+                        </span>
+                    </div>
+                    <button onclick="navigator.share ? navigator.share({title:'@Model.Title',url:window.location.href}) : copyLink()"
+                            class="btn btn-gym-dark btn-sm" title="Share this meetup">
+                        <i class="bi bi-share"></i> Share
+                    </button>
+                </div>
+
+                <h1 class="fw-bold mb-2" style="color:var(--text-1);font-size:clamp(1.4rem,3vw,2rem)">@Model.Title</h1>
+
+                <div class="d-flex flex-wrap gap-3 mb-4" style="font-size:.85rem;color:var(--text-3)">
+                    <span><i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@Model.Location</span>
+                    @if (!string.IsNullOrEmpty(Model.PostedBy))
+                    {
+                        <span><i class="bi bi-person-fill me-1" style="color:var(--gym-orange)"></i>@Model.PostedBy</span>
+                    }
+                </div>
+
+                <p style="color:var(--text-2);line-height:1.75;font-size:.95rem">@Model.Description</p>
+
+                <div class="mt-4 pt-3" style="border-top:1px solid var(--border)">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-gym-dark btn-sm">
+                        <i class="bi bi-arrow-left"></i> Back to Feed
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="gym-detail-card mb-3">
+                <h6 class="fw-bold mb-3" style="color:var(--text-1)">
+                    <i class="bi bi-telephone-fill me-2" style="color:var(--gym-orange)"></i>Contact the Organiser
+                </h6>
+
+                @if (!hasContact)
+                {
+                    <div class="text-center py-3">
+                        <i class="bi bi-chat-dots" style="font-size:2rem;color:var(--text-3)"></i>
+                        <p class="text-muted small mt-2 mb-0">No contact details provided yet.</p>
+                    </div>
+                }
+                else
+                {
+                    @if (!string.IsNullOrEmpty(Model.ContactDetail?.BookingUrl))
+                    {
+                        <a href="@Model.ContactDetail.BookingUrl" target="_blank" class="btn btn-gym w-100 mb-3">
+                            <i class="bi bi-calendar-check-fill"></i>Book a Spot
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ContactDetail?.WhatsApp))
+                    {
+                        <a href="https://wa.me/@(Model.ContactDetail.WhatsApp.Replace("+","").Replace(" ",""))" target="_blank" class="gym-contact-item">
+                            <span class="gym-contact-icon"><i class="bi bi-whatsapp"></i></span>
+                            <span>@Model.ContactDetail.WhatsApp</span>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ContactDetail?.Phone))
+                    {
+                        <a href="tel:@Model.ContactDetail.Phone" class="gym-contact-item">
+                            <span class="gym-contact-icon"><i class="bi bi-telephone-fill"></i></span>
+                            <span>@Model.ContactDetail.Phone</span>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ContactDetail?.Email))
+                    {
+                        <a href="mailto:@Model.ContactDetail.Email" class="gym-contact-item">
+                            <span class="gym-contact-icon"><i class="bi bi-envelope-fill"></i></span>
+                            <span>@Model.ContactDetail.Email</span>
+                        </a>
+                    }
+                }
+            </div>
+
+            <div class="gym-detail-card" style="background:var(--gym-orange-dim);border-color:var(--border-o)">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-geo-alt-fill" style="color:var(--gym-orange);font-size:1.2rem"></i>
+                    <span class="fw-semibold" style="color:var(--text-1);font-size:.9rem">Location</span>
+                </div>
+                <p class="mb-0" style="color:var(--text-2);font-size:.9rem">@Model.Location</p>
+            </div>
+
+            @* ── Event date + WhatsApp reminder ─────────────────── *@
+            @if (Model.EventDate.HasValue)
+            {
+                <div class="gym-detail-card mt-3" style="background:rgba(249,115,22,.07);border-color:var(--border-o)">
+                    <h6 class="fw-bold mb-3" style="color:var(--text-1)">
+                        <i class="bi bi-calendar-event-fill me-2" style="color:var(--gym-orange)"></i>Event Date
+                    </h6>
+                    <p class="mb-3" style="color:var(--text-2);font-size:.95rem;font-weight:600">
+                        @Model.EventDate.Value.ToString("dddd, d MMMM yyyy")<br/>
+                        <span style="color:var(--gym-orange)">@Model.EventDate.Value.ToString("HH:mm")</span>
+                    </p>
+                    @if (waReminderUrl != null)
+                    {
+                        <a href="@waReminderUrl" target="_blank"
+                           class="btn btn-sm w-100" style="background:#25D366;color:#fff;font-weight:600">
+                            <i class="bi bi-whatsapp me-2"></i>Send Reminder via WhatsApp
+                        </a>
+                    }
+                </div>
+            }
+
+            @* ── Map card ────────────────────────────────────────── *@
+            @if (hasMap)
+            {
+                <div class="gym-detail-card mt-3">
+                    <h6 class="fw-bold mb-3" style="color:var(--text-1)">
+                        <i class="bi bi-map-fill me-2" style="color:var(--gym-orange)"></i>Map
+                    </h6>
+                    <div id="detailMap" style="height:220px;border-radius:var(--radius);overflow:hidden"
+                         data-lat="@Model.Latitude" data-lng="@Model.Longitude"
+                         data-title="@Model.Title"></div>
+                    <a href="https://www.google.com/maps?q=@(Model.Latitude),@(Model.Longitude)"
+                       target="_blank" class="btn btn-gym-dark btn-sm w-100 mt-2">
+                        <i class="bi bi-map me-1"></i>Open in Google Maps
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            var btn = event.target.closest('button');
+            btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+            setTimeout(function() { btn.innerHTML = '<i class="bi bi-share"></i> Share'; }, 2000);
+        }
+
+        (function () {
+            var el = document.getElementById('detailMap');
+            if (!el) return;
+            var lat = parseFloat(el.dataset.lat);
+            var lng = parseFloat(el.dataset.lng);
+            var title = el.dataset.title || '';
+            if (isNaN(lat) || isNaN(lng)) return;
+
+            var map = L.map(el, { zoomControl: true, scrollWheelZoom: false }).setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19
+            }).addTo(map);
+            L.marker([lat, lng]).addTo(map).bindPopup(title).openPopup();
+        })();
+    </script>
+}

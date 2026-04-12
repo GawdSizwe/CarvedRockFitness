@@ -1,0 +1,246 @@
+@model CarvedRockFitness.Web.Controllers.CreateSuggestionRequest
+@{
+    ViewData["Title"] = "Post a Listing";
+}
+
+@section Head {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb" style="background:none;padding:0;font-size:.85rem">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Home" asp-action="Index" style="color:var(--text-3);text-decoration:none">
+                            <i class="bi bi-house-fill me-1"></i>Feed
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" style="color:var(--text-3)">New Listing</li>
+                </ol>
+            </nav>
+
+            <h2 class="fw-bold mb-1" style="color:var(--text-1)">
+                <i class="bi bi-plus-circle-fill me-2" style="color:var(--gym-orange)"></i>Post a Listing
+            </h2>
+            <p class="mb-4" style="color:var(--text-3)">Share your sport event, session, or service with South Africa's fitness community.</p>
+
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-4"></div>
+
+                @*Section 1: Meetup Details*@
+                <div class="gym-detail-card mb-4">
+                    <div class="gym-section-head mb-4">
+                        <div class="gym-section-dot"></div>
+                        <h2><i class="bi bi-info-circle me-2" style="color:var(--gym-orange)"></i>Meetup Details</h2>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="gym-label form-label">Title</label>
+                        <input asp-for="Title" class="form-control gym-input"
+                               placeholder="e.g. Morning HIIT at Sandton Gym"
+                               maxlength="100" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label asp-for="Description" class="gym-label form-label mb-0">Description</label>
+                            <span id="desc-count" style="font-size:.72rem;color:var(--text-3)">0 / 500</span>
+                        </div>
+                        <textarea asp-for="Description" id="desc-field" class="form-control gym-input" rows="4"
+                                  maxlength="500"
+                                  oninput="document.getElementById('desc-count').textContent=this.value.length+' / 500'"
+                                  placeholder="Describe the session, fitness level, what to bring..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Category" class="gym-label form-label">Category</label>
+                            <select asp-for="Category" class="form-select gym-select gym-input">
+                                <option value="">Select category...</option>
+                                <optgroup label="⚽ Sport">
+                                    <option>Football</option>
+                                    <option>Cricket</option>
+                                    <option>Tennis</option>
+                                    <option>Running</option>
+                                    <option>Cycling</option>
+                                    <option>Swimming</option>
+                                    <option>Boxing</option>
+                                </optgroup>
+                                <optgroup label="💪 Fitness">
+                                    <option>HIIT</option>
+                                    <option>Strength</option>
+                                    <option>Yoga</option>
+                                    <option>CrossFit</option>
+                                </optgroup>
+                                <optgroup label="🚌 Services">
+                                    <option>Transport</option>
+                                    <option>Coaching</option>
+                                    <option>Other</option>
+                                </optgroup>
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Location" class="gym-label form-label">Location</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="background:var(--bg-card-2);border:1px solid var(--border);border-right:0;color:var(--gym-orange)">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </span>
+                                <input asp-for="Location" class="form-control gym-input" style="border-left:0"
+                                       placeholder="e.g. Sandton, Johannesburg" />
+                            </div>
+                            <span asp-validation-for="Location" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    @* Hidden lat/lng populated by map *@
+                    <input type="hidden" name="Latitude"  id="latInput"  />
+                    <input type="hidden" name="Longitude" id="lngInput"  />
+
+                    <div class="mb-3">
+                        <label class="gym-label form-label">
+                            <i class="bi bi-map me-1" style="color:var(--gym-orange)"></i>Pin on Map
+                            <span style="color:var(--text-3);font-weight:400">(optional — click to drop pin)</span>
+                        </label>
+                        <div id="leafletMap" style="height:260px;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden"></div>
+                        <div id="mapHint" class="form-text" style="color:var(--text-3);font-size:.75rem">
+                            <i class="bi bi-crosshair me-1"></i>Click the map to place a pin. Drag the pin to adjust.
+                        </div>
+                        <div id="mapCoords" class="form-text" style="color:var(--gym-orange);font-size:.75rem;display:none">
+                            <i class="bi bi-geo-alt-fill me-1"></i><span id="coordsText"></span>
+                            <a href="#" id="clearPin" class="ms-2" style="color:var(--text-3);font-size:.72rem">Remove pin</a>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="gym-label form-label">
+                            <i class="bi bi-calendar-event me-1" style="color:var(--gym-orange)"></i>Event Date &amp; Time
+                            <span style="color:var(--text-3);font-weight:400">(optional)</span>
+                        </label>
+                        <input type="datetime-local" name="EventDate" class="form-control gym-input" />
+                        <div class="form-text" style="color:var(--text-3);font-size:.75rem">Set this so members can get reminders before the event.</div>
+                    </div>
+
+                    <div>
+                        <label class="gym-label form-label">
+                            Cover Image <span style="color:var(--text-3);font-weight:400">(optional — max 5 MB)</span>
+                        </label>
+                        <input type="file" name="image" class="form-control gym-input" accept="image/*" />
+                    </div>
+                </div>
+
+                @*Section 2: Contact Details*@
+                <div class="gym-detail-card mb-4">
+                    <div class="gym-section-head mb-4">
+                        <div class="gym-section-dot"></div>
+                        <h2><i class="bi bi-telephone me-2" style="color:var(--gym-orange)"></i>Contact Details <span style="color:var(--text-3);font-size:.85rem;font-weight:400">(optional)</span></h2>
+                    </div>
+                    <p style="color:var(--text-3);font-size:.85rem;margin-top:-.5rem;margin-bottom:1rem">
+                        Let attendees reach you. At least one contact method is recommended.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="gym-label form-label"><i class="bi bi-telephone me-1"></i>Phone</label>
+                            <input asp-for="Phone" class="form-control gym-input" placeholder="+27 71 234 5678" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="WhatsApp" class="gym-label form-label"><i class="bi bi-whatsapp me-1"></i>WhatsApp</label>
+                            <input asp-for="WhatsApp" class="form-control gym-input" placeholder="+27 71 234 5678" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="gym-label form-label"><i class="bi bi-envelope me-1"></i>Email</label>
+                            <input asp-for="Email" class="form-control gym-input" placeholder="contact@example.com" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="BookingUrl" class="gym-label form-label"><i class="bi bi-calendar-check me-1"></i>Booking URL</label>
+                            <input asp-for="BookingUrl" class="form-control gym-input" placeholder="https://..." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 flex-wrap">
+                    <button type="submit" class="btn btn-gym px-5">
+                        <i class="bi bi-send-fill"></i>Publish Listing
+                    </button>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-gym-dark">
+                        <i class="bi bi-x-circle"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+    (function () {
+        var map = L.map('leafletMap', { zoomControl: true }).setView([-26.2041, 28.0473], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
+
+        var marker = null;
+        var latInput  = document.getElementById('latInput');
+        var lngInput  = document.getElementById('lngInput');
+        var coordsBox = document.getElementById('mapCoords');
+        var coordsTxt = document.getElementById('coordsText');
+        var clearBtn  = document.getElementById('clearPin');
+
+        function placeMarker(latlng) {
+            if (marker) {
+                marker.setLatLng(latlng);
+            } else {
+                marker = L.marker(latlng, { draggable: true }).addTo(map);
+                marker.on('dragend', function (e) {
+                    updateCoords(e.target.getLatLng());
+                });
+            }
+            updateCoords(latlng);
+        }
+
+        function updateCoords(latlng) {
+            latInput.value  = latlng.lat.toFixed(6);
+            lngInput.value  = latlng.lng.toFixed(6);
+            coordsTxt.textContent = latlng.lat.toFixed(5) + ', ' + latlng.lng.toFixed(5);
+            coordsBox.style.display = 'block';
+        }
+
+        map.on('click', function (e) { placeMarker(e.latlng); });
+
+        clearBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (marker) { map.removeLayer(marker); marker = null; }
+            latInput.value = '';
+            lngInput.value = '';
+            coordsBox.style.display = 'none';
+        });
+
+        // Auto-geocode when Location field loses focus
+        var locField = document.querySelector('[name="Location"]');
+        if (locField) {
+            locField.addEventListener('blur', function () {
+                var q = this.value.trim();
+                if (!q) return;
+                fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q + ', South Africa'))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data && data.length > 0) {
+                            var ll = L.latLng(parseFloat(data[0].lat), parseFloat(data[0].lon));
+                            map.setView(ll, 14);
+                            placeMarker(ll);
+                        }
+                    })
+                    .catch(function () {});
+            });
+        }
+    })();
+    </script>
+}

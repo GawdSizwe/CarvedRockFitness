@@ -1,22 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace CarvedRockFitness.API.Entities;
 
 [Table("Users")]
-public class User
+public class User : IdentityUser<int>
 {
-    [Key]
-    public int Id { get; set; }
-
     [Required]
     public required string Name { get; set; }
 
     [Required]
-    public required string Email { get; set; }
+    public required string Role { get; set; } // "Trainer", "Trainee", "Admin", "FreeUser", "PaidUser"
 
-    [Required]
-    public required string Role { get; set; } // "Trainer", "Trainee", "Admin", ...
+    public bool IsPaidUser { get; set; }
 
     public ICollection<Routine> Routines { get; set; } = [];
 

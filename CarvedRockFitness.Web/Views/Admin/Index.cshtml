@@ -1,0 +1,379 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var users       = ViewBag.Users       as List<UserSummaryDto>  ?? new();
+    var suggestions = ViewBag.Suggestions as List<SuggestionDto>   ?? new();
+    var banners     = ViewBag.Banners     as List<AdBannerDto>     ?? new();
+    var demoVisible = ViewBag.DemoVisible is bool b && b;
+    var categoryIcons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["HIIT"]      = "gym-badge-hiit",
+        ["Yoga"]      = "gym-badge-yoga",
+        ["Strength"]  = "gym-badge-strength",
+        ["Running"]   = "gym-badge-running",
+        ["Boxing"]    = "gym-badge-boxing",
+        ["CrossFit"]  = "gym-badge-crossfit",
+        ["Football"]  = "gym-badge-football",
+        ["Cricket"]   = "gym-badge-cricket",
+        ["Cycling"]   = "gym-badge-cycling",
+        ["Tennis"]    = "gym-badge-tennis",
+        ["Swimming"]  = "gym-badge-swimming",
+        ["Transport"] = "gym-badge-transport",
+    };
+}
+
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color:var(--text-1)">
+                <i class="bi bi-shield-fill me-2" style="color:var(--gym-orange)"></i>Admin Dashboard
+            </h2>
+            <p class="text-muted mb-0" style="font-size:.875rem">Manage users, listings, and ad banners across Sport &amp; Health Meetups SA.</p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-gym-dark btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Feed
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success py-2 small mb-4"><i class="bi bi-check-circle me-1"></i>@TempData["Success"]</div>
+    }
+
+    <div class="gym-detail-card mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <h6 class="fw-bold mb-1" style="color:var(--text-1)">
+                <i class="bi bi-database-fill me-2" style="color:var(--gym-orange)"></i>Demo / Seed Data
+            </h6>
+            <p class="text-muted small mb-0">
+                @if (demoVisible)
+                {
+                    <span><i class="bi bi-eye-fill text-success me-1"></i>Demo listings are <strong>visible</strong> in the public feed — good for dev &amp; demos.</span>
+                }
+                else
+                {
+                    <span><i class="bi bi-eye-slash-fill text-danger me-1"></i>Demo listings are <strong>hidden</strong> — only real client listings show.</span>
+                }
+            </p>
+        </div>
+        <form asp-action="ToggleDemoData" method="post">
+            <button type="submit" class="btn btn-sm @(demoVisible ? "btn-gym" : "btn-gym-dark")">
+                <i class="bi bi-toggle-@(demoVisible ? "on" : "off") me-1"></i>
+                @(demoVisible ? "Hide Demo Data" : "Show Demo Data")
+            </button>
+        </form>
+    </div>
+
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="gym-stat-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="gym-stat-label">Total Users</div>
+                    <i class="bi bi-people-fill" style="color:var(--gym-orange);font-size:1.2rem"></i>
+                </div>
+                <div class="gym-stat-number">@users.Count</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="gym-stat-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="gym-stat-label">Premium</div>
+                    <i class="bi bi-lightning-fill" style="color:var(--gym-orange);font-size:1.2rem"></i>
+                </div>
+                <div class="gym-stat-number">@users.Count(u => u.IsPaidUser)</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="gym-stat-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="gym-stat-label">Meetups</div>
+                    <i class="bi bi-calendar-event-fill" style="color:var(--gym-orange);font-size:1.2rem"></i>
+                </div>
+                <div class="gym-stat-number">@suggestions.Count</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="gym-stat-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="gym-stat-label">Admins</div>
+                    <i class="bi bi-shield-fill" style="color:var(--gym-orange);font-size:1.2rem"></i>
+                </div>
+                <div class="gym-stat-number">@users.Count(u => u.Role == "Admin")</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="gym-detail-card mb-5">
+        <div class="gym-section-head mb-4">
+            <div class="gym-section-dot"></div>
+            <h2><i class="bi bi-people-fill me-2" style="color:var(--gym-orange)"></i>Members</h2>
+            <span class="text-muted ms-auto" style="font-size:.8rem">@users.Count total</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table gym-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Plan</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in users)
+                    {
+                        <tr class="@(u.IsBanned ? "table-danger opacity-75" : "")">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gym-orange),var(--gym-orange-light));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;color:#fff;flex-shrink:0">
+                                        @(u.Name?.Length > 0 ? u.Name[0].ToString().ToUpper() : "?")
+                                    </div>
+                                    <span class="fw-semibold" style="color:var(--text-1)">@u.Name</span>
+                                </div>
+                            </td>
+                            <td style="color:var(--text-3);font-size:.875rem">@u.Email</td>
+                            <td>
+                                @if (u.Role == "Admin")
+                                {
+                                    <span class="gym-role-admin"><i class="bi bi-shield-fill me-1"></i>Admin</span>
+                                }
+                                else if (u.Role == "PaidUser")
+                                {
+                                    <span class="gym-role-paid">Premium</span>
+                                }
+                                else
+                                {
+                                    <span class="gym-role-free">@u.Role</span>
+                                }
+                            </td>
+                            <td>
+                                @if (u.IsPaidUser)
+                                {
+                                    <span class="gym-role-paid"><i class="bi bi-lightning-fill me-1"></i>Premium</span>
+                                }
+                                else
+                                {
+                                    <span class="gym-role-free">Free</span>
+                                }
+                            </td>
+                            <td>
+                                @if (u.IsBanned)
+                                {
+                                    <span style="color:#ef4444;font-size:.8rem"><i class="bi bi-slash-circle-fill me-1"></i>Banned</span>
+                                }
+                                else
+                                {
+                                    <span style="color:#22c55e;font-size:.8rem"><i class="bi bi-circle-fill me-1"></i>Active</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <form asp-action="BanUser" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@u.Id" />
+                                        <button type="submit" class="btn btn-sm" title="@(u.IsBanned ? "Unban user" : "Ban user")"
+                                                style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:#f97316">
+                                            <i class="bi bi-@(u.IsBanned ? "unlock-fill" : "slash-circle")"></i>
+                                        </button>
+                                    </form>
+                                    @if (u.Role != "Admin")
+                                    {
+                                        <form asp-action="DeleteUser" method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete @u.Name? This cannot be undone.')">
+                                            <input type="hidden" name="id" value="@u.Id" />
+                                            <button type="submit" class="btn btn-sm"
+                                                    style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="gym-detail-card">
+        <div class="gym-section-head mb-4">
+            <div class="gym-section-dot"></div>
+            <h2><i class="bi bi-collection-fill me-2" style="color:var(--gym-orange)"></i>Listings</h2>
+            <span class="text-muted ms-auto" style="font-size:.8rem">@suggestions.Count total</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table gym-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Posted</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in suggestions)
+                    {
+                        var badgeCss = categoryIcons.TryGetValue(s.Category ?? "", out var bc) ? bc : "gym-badge-default";
+                        <tr>
+                            <td class="fw-semibold" style="color:var(--text-1)">@s.Title</td>
+                            <td><span class="gym-badge @badgeCss">@s.Category</span></td>
+                            <td style="color:var(--text-3);font-size:.875rem">
+                                <i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@s.Location
+                            </td>
+                            <td style="color:var(--text-3);font-size:.8rem">
+                                @s.CreatedAt.ToString("dd MMM yy")
+                                @if (s.IsPinned) { <span class="ms-1" title="Pinned" style="color:var(--gym-orange)"><i class="bi bi-pin-fill"></i></span> }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <a asp-controller="Suggestion" asp-action="Details" asp-route-id="@s.Id"
+                                       class="btn btn-gym-dark btn-sm" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <form asp-action="PinSuggestion" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <button type="submit" class="btn btn-sm" title="@(s.IsPinned ? "Unpin" : "Pin to top")"
+                                                style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:#f97316">
+                                            <i class="bi bi-pin@(s.IsPinned ? "-fill" : "")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="HideSuggestion" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <button type="submit" class="btn btn-sm" title="Hide/Show"
+                                                style="background:rgba(100,116,139,.12);border:1px solid rgba(100,116,139,.3);color:#94a3b8">
+                                            <i class="bi bi-eye-slash"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="BoostSuggestion" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <button type="submit" class="btn btn-sm" title="Boost priority"
+                                                style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e">
+                                            <i class="bi bi-arrow-up-circle"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="DeleteSuggestion" method="post" class="d-inline"
+                                          onsubmit="return confirmDelete('@s.Title')">
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <button type="submit" class="btn btn-sm" title="Delete"
+                                                style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="gym-detail-card mt-4">
+        <div class="gym-section-head mb-4">
+            <div class="gym-section-dot"></div>
+            <h2><i class="bi bi-megaphone-fill me-2" style="color:var(--gym-orange)"></i>Ad Banners</h2>
+            <span class="text-muted ms-auto" style="font-size:.8rem">@banners.Count(b => b.IsActive) active</span>
+        </div>
+
+        <form asp-action="CreateBanner" method="post" class="row g-2 mb-4 p-3"
+              style="background:var(--bg-card-2);border-radius:var(--radius);border:1px solid var(--border)">
+            <div class="col-md-3">
+                <input name="businessName" class="form-control gym-input" placeholder="Business name *" required />
+            </div>
+            <div class="col-md-4">
+                <input name="imageUrl" class="form-control gym-input" placeholder="Image URL (800×200 recommended) *" required />
+            </div>
+            <div class="col-md-2">
+                <input name="linkUrl" class="form-control gym-input" placeholder="Link URL (optional)" />
+            </div>
+            <div class="col-md-2">
+                <input name="tagLine" class="form-control gym-input" placeholder="Tagline (optional)" />
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-gym w-100"><i class="bi bi-plus-lg"></i></button>
+            </div>
+        </form>
+
+        @if (!banners.Any())
+        {
+            <p class="text-muted small">No banners yet. Add one above.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table gym-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Preview</th>
+                            <th>Business</th>
+                            <th>Tagline</th>
+                            <th>Status</th>
+                            <th>Demo</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var banner in banners)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="@banner.ImageUrl" alt="@banner.BusinessName"
+                                         style="height:36px;border-radius:4px;object-fit:cover;max-width:120px" />
+                                </td>
+                                <td class="fw-semibold" style="color:var(--text-1)">@banner.BusinessName</td>
+                                <td style="color:var(--text-3);font-size:.85rem">@banner.TagLine</td>
+                                <td>
+                                    @if (banner.IsActive)
+                                    {
+                                        <span style="color:#22c55e;font-size:.8rem"><i class="bi bi-circle-fill me-1"></i>Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--text-3);font-size:.8rem"><i class="bi bi-circle me-1"></i>Paused</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (banner.IsDemoData)
+                                    {
+                                        <span class="gym-badge gym-badge-default">Demo</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <form asp-action="ToggleBanner" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@banner.Id" />
+                                            <button type="submit" class="btn btn-sm" title="@(banner.IsActive ? "Pause" : "Activate")"
+                                                    style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:#f97316">
+                                                <i class="bi bi-@(banner.IsActive ? "pause-fill" : "play-fill")"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-action="DeleteBanner" method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this banner?')">
+                                            <input type="hidden" name="id" value="@banner.Id" />
+                                            <button type="submit" class="btn btn-sm"
+                                                    style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(title) {
+            return confirm('Delete "' + title + '"?\nThis cannot be undone.');
+        }
+    </script>
+}

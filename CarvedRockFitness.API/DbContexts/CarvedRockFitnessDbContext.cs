@@ -1,15 +1,30 @@
 using CarvedRockFitness.API.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarvedRockFitness.API.DbContexts;
 
-public class CarvedRockFitnessDbContext(DbContextOptions<CarvedRockFitnessDbContext> options) : DbContext(options)
+public class CarvedRockFitnessDbContext(DbContextOptions<CarvedRockFitnessDbContext> options) 
+    : IdentityDbContext<User, IdentityRole<int>, int>(options)
 {
     public DbSet<Routine> Routines { get; set; }
-    public DbSet<User> Users { get; set; }
+    public override DbSet<User> Users { get; set; }
+    public DbSet<Suggestion> Suggestions { get; set; }
+    public DbSet<ContactDetail> ContactDetails { get; set; }
+    public DbSet<Subscription> Subscriptions { get; set; }
+    public DbSet<AdBanner> AdBanners { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.ConfigureWarnings(w =>
+            w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<User>()
             .HasMany(u => u.Trainees)
             .WithOne(u => u.Trainer)
@@ -22,16 +37,38 @@ public class CarvedRockFitnessDbContext(DbContextOptions<CarvedRockFitnessDbCont
 
         // Seed data
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 1, Name = "John Doe", Email = "john.doe@carvedrockfitness.com", Role = "Admin" },
-            new User { Id = 2, Name = "Jane Smith", Email = "jane.smith@carvedrockfitness.com", Role = "Trainer" },
-            new User { Id = 3, Name = "Mike Johnson", Email = "mike.johnson@carvedrockfitness.com", Role = "Trainer" },
-            new User { Id = 4, Name = "Emily Davis", Email = "emily.davis@carvedrockfitness.com", Role = "Trainee", TrainerId = 2 },
-            new User { Id = 5, Name = "Chris Brown", Email = "chris.brown@carvedrockfitness.com", Role = "Trainee", TrainerId = 2 },
-            new User { Id = 6, Name = "Patricia Taylor", Email = "patricia.taylor@carvedrockfitness.com", Role = "Trainee", TrainerId = 3 },
-            new User { Id = 7, Name = "Robert Wilson", Email = "robert.wilson@carvedrockfitness.com", Role = "Trainee", TrainerId = 3 },
-            new User { Id = 8, Name = "Linda Martinez", Email = "linda.martinez@carvedrockfitness.com", Role = "Trainee", TrainerId = 3 },
-            new User { Id = 9, Name = "David Anderson", Email = "david.anderson@carvedrockfitness.com", Role = "Trainee", TrainerId = 2 },
-            new User { Id = 10, Name = "Sarah Thomas", Email = "sarah.thomas@carvedrockfitness.com", Role = "Trainee", TrainerId = 2 }
+            new User { Id = 1, Name = "John Doe", UserName = "john.doe@carvedrockfitness.com", NormalizedUserName = "JOHN.DOE@CARVEDROCKFITNESS.COM", Email = "john.doe@carvedrockfitness.com", NormalizedEmail="JOHN.DOE@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-1", ConcurrencyStamp = "static-concurrency-1", Role = "Admin", IsPaidUser = true },
+            new User { Id = 2, Name = "Jane Smith", UserName = "jane.smith@carvedrockfitness.com", NormalizedUserName = "JANE.SMITH@CARVEDROCKFITNESS.COM", Email = "jane.smith@carvedrockfitness.com", NormalizedEmail="JANE.SMITH@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-2", ConcurrencyStamp = "static-concurrency-2", Role = "Trainer", IsPaidUser = true },
+            new User { Id = 3, Name = "Mike Johnson", UserName = "mike.johnson@carvedrockfitness.com", NormalizedUserName = "MIKE.JOHNSON@CARVEDROCKFITNESS.COM", Email = "mike.johnson@carvedrockfitness.com", NormalizedEmail="MIKE.JOHNSON@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-3", ConcurrencyStamp = "static-concurrency-3", Role = "Trainer", IsPaidUser = true },
+            new User { Id = 4, Name = "Emily Davis", UserName = "emily.davis@carvedrockfitness.com", NormalizedUserName = "EMILY.DAVIS@CARVEDROCKFITNESS.COM", Email = "emily.davis@carvedrockfitness.com", NormalizedEmail="EMILY.DAVIS@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-4", ConcurrencyStamp = "static-concurrency-4", Role = "Trainee", TrainerId = 2 },
+            new User { Id = 5, Name = "Chris Brown", UserName = "chris.brown@carvedrockfitness.com", NormalizedUserName = "CHRIS.BROWN@CARVEDROCKFITNESS.COM", Email = "chris.brown@carvedrockfitness.com", NormalizedEmail="CHRIS.BROWN@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-5", ConcurrencyStamp = "static-concurrency-5", Role = "Trainee", TrainerId = 2 },
+            new User { Id = 6, Name = "Patricia Taylor", UserName = "patricia.taylor@carvedrockfitness.com", NormalizedUserName = "PATRICIA.TAYLOR@CARVEDROCKFITNESS.COM", Email = "patricia.taylor@carvedrockfitness.com", NormalizedEmail="PATRICIA.TAYLOR@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-6", ConcurrencyStamp = "static-concurrency-6", Role = "Trainee", TrainerId = 3 },
+            new User { Id = 7, Name = "Robert Wilson", UserName = "robert.wilson@carvedrockfitness.com", NormalizedUserName = "ROBERT.WILSON@CARVEDROCKFITNESS.COM", Email = "robert.wilson@carvedrockfitness.com", NormalizedEmail="ROBERT.WILSON@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-7", ConcurrencyStamp = "static-concurrency-7", Role = "Trainee", TrainerId = 3 },
+            new User { Id = 8, Name = "Linda Martinez", UserName = "linda.martinez@carvedrockfitness.com", NormalizedUserName = "LINDA.MARTINEZ@CARVEDROCKFITNESS.COM", Email = "linda.martinez@carvedrockfitness.com", NormalizedEmail="LINDA.MARTINEZ@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-8", ConcurrencyStamp = "static-concurrency-8", Role = "Trainee", TrainerId = 3 },
+            new User { Id = 9, Name = "David Anderson", UserName = "david.anderson@carvedrockfitness.com", NormalizedUserName = "DAVID.ANDERSON@CARVEDROCKFITNESS.COM", Email = "david.anderson@carvedrockfitness.com", NormalizedEmail="DAVID.ANDERSON@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-9", ConcurrencyStamp = "static-concurrency-9", Role = "Trainee", TrainerId = 2 },
+            new User { Id = 10, Name = "Sarah Thomas", UserName = "sarah.thomas@carvedrockfitness.com", NormalizedUserName = "SARAH.THOMAS@CARVEDROCKFITNESS.COM", Email = "sarah.thomas@carvedrockfitness.com", NormalizedEmail="SARAH.THOMAS@CARVEDROCKFITNESS.COM", EmailConfirmed = true, SecurityStamp = "static-stamp-10", ConcurrencyStamp = "static-concurrency-10", Role = "Trainee", TrainerId = 2 }
+        );
+
+        modelBuilder.Entity<AdBanner>().HasData(
+            new AdBanner { Id = 1, BusinessName = "Tembisa Sports Gear",    ImageUrl = "https://placehold.co/800x200/FF6B00/FFFFFF?text=Tembisa+Sports+Gear",    LinkUrl = "#", TagLine = "Boots, kits & balls — delivered to your door",     IsActive = true, IsDemoData = true, CreatedAt = new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new AdBanner { Id = 2, BusinessName = "Soweto Shisanyama",       ImageUrl = "https://placehold.co/800x200/1A1A2E/FF6B00?text=Soweto+Shisanyama",       LinkUrl = "#", TagLine = "After the game, celebrate with us — Alexandra",   IsActive = true, IsDemoData = true, CreatedAt = new DateTime(2025, 3, 2, 0, 0, 0, DateTimeKind.Utc) },
+            new AdBanner { Id = 3, BusinessName = "YVEDA Academy",           ImageUrl = "https://placehold.co/800x200/003366/FFD700?text=YVEDA+Elite+Development", LinkUrl = "#", TagLine = "Building champions in sport. Shaping leaders in life.", IsActive = true, IsDemoData = true, CreatedAt = new DateTime(2025, 3, 3, 0, 0, 0, DateTimeKind.Utc) },
+            new AdBanner { Id = 4, BusinessName = "Capitec Bank",            ImageUrl = "https://placehold.co/800x200/007B5E/FFFFFF?text=Capitec+Bank",            LinkUrl = "#", TagLine = "Pay your sport fees instantly with Capitec Pay",   IsActive = true, IsDemoData = true, CreatedAt = new DateTime(2025, 3, 4, 0, 0, 0, DateTimeKind.Utc) }
+        );
+
+        modelBuilder.Entity<Suggestion>().HasData(
+            new Suggestion { Id = 1,  IsDemoData = true, Title = "Morning HIIT at CityRock",           Description = "High intensity interval training for all levels. 45 min sweat session — bring water and a towel. Coach-led, limited to 20 people.",                                            Category = "HIIT",      Location = "Cape Town, Woodstock",       CreatedAt = new DateTime(2025, 3,  1,  6,  0, 0, DateTimeKind.Utc), CreatedByName = "John Doe" },
+            new Suggestion { Id = 2,  IsDemoData = true, Title = "Sunday Yoga & Mobility Flow",         Description = "Slow-paced yoga and mobility work. Perfect active recovery for athletes. All levels welcome, mats provided.",                                                               Category = "Yoga",      Location = "Johannesburg, Sandton",      CreatedAt = new DateTime(2025, 3,  5,  7, 30, 0, DateTimeKind.Utc), CreatedByName = "Jane Smith" },
+            new Suggestion { Id = 3,  IsDemoData = true, Title = "Powerlifting Club — Weekly Meet",     Description = "Squat, bench and deadlift coaching every Thursday evening. Spotters available. Bring your programme and let's grind.",                                                       Category = "Strength",  Location = "Durban, Umhlanga",           CreatedAt = new DateTime(2025, 3,  8, 18,  0, 0, DateTimeKind.Utc), CreatedByName = "Mike Johnson" },
+            new Suggestion { Id = 4,  IsDemoData = true, Title = "5km Park Run Social Group",           Description = "Friendly running group every Saturday at 7am. All paces welcome — from first-timers to 20-minute runners. We grab coffee after.",                                           Category = "Running",   Location = "Pretoria, Groenkloof",       CreatedAt = new DateTime(2025, 3, 10,  7,  0, 0, DateTimeKind.Utc), CreatedByName = "John Doe" },
+            new Suggestion { Id = 5,  IsDemoData = true, Title = "Boxing Conditioning Class",           Description = "Cardio boxing with bag work and partner drills. No experience needed. Get fit, relieve stress, meet great people.",                                                          Category = "Boxing",    Location = "Cape Town, Green Point",     CreatedAt = new DateTime(2025, 3, 12, 17,  0, 0, DateTimeKind.Utc), CreatedByName = "Jane Smith" },
+            new Suggestion { Id = 6,  IsDemoData = true, Title = "CrossFit Open Community WOD",         Description = "Open community workout of the day. All athletes welcome regardless of level. Scaled and RX options available. Let's suffer together!",                                       Category = "CrossFit",  Location = "Johannesburg, Fourways",     CreatedAt = new DateTime(2025, 3, 15,  6,  0, 0, DateTimeKind.Utc), CreatedByName = "Mike Johnson" },
+            new Suggestion { Id = 7,  IsDemoData = true, Title = "Sunday League Football — Soweto",     Description = "Weekly Sunday league for ages 16+. 11-a-side, kick-off at 9am. Bring your boots and your game. All skill levels welcome. Teams of 11 or join as a free agent.",             Category = "Football",  Location = "Soweto, Meadowlands",        CreatedAt = new DateTime(2025, 3, 20,  8,  0, 0, DateTimeKind.Utc), CreatedByName = "John Doe" },
+            new Suggestion { Id = 8,  IsDemoData = true, Title = "5-a-Side Football — Alexandra",       Description = "Friday evening 5-a-side at the Alex community pitch. R20 per player. Goalkeepers especially needed. WhatsApp to confirm your spot before 2pm on Friday.",                  Category = "Football",  Location = "Alexandra, Johannesburg",    CreatedAt = new DateTime(2025, 3, 22, 16,  0, 0, DateTimeKind.Utc), CreatedByName = "Jane Smith" },
+            new Suggestion { Id = 9,  IsDemoData = true, Title = "Township Cricket League — Tembisa",   Description = "Saturday morning cricket league for adults. Batting, bowling and fielding coaching included. Bats and pads provided for new players. Competitive and friendly atmosphere.",   Category = "Cricket",   Location = "Tembisa, Kempton Park",      CreatedAt = new DateTime(2025, 3, 24,  8,  0, 0, DateTimeKind.Utc), CreatedByName = "Mike Johnson" },
+            new Suggestion { Id = 10, IsDemoData = true, Title = "Morning Cycling Club — Pretoria East",Description = "Road cycling group every Saturday 6am. Routes from 30km to 80km. All road bikes welcome. Safety briefing before each ride. Coffee stop at 40km mark.",                       Category = "Cycling",   Location = "Pretoria East, Garsfontein", CreatedAt = new DateTime(2025, 3, 26,  6,  0, 0, DateTimeKind.Utc), CreatedByName = "John Doe" },
+            new Suggestion { Id = 11, IsDemoData = true, Title = "Kids Tennis Coaching — Sandton",      Description = "Tennis lessons for beginners aged 8–16. Qualified coach with 10 years experience. Rackets provided. Small groups of max 6 kids. Saturdays 10am–12pm.",                       Category = "Tennis",    Location = "Sandton, Johannesburg",      CreatedAt = new DateTime(2025, 3, 28, 10,  0, 0, DateTimeKind.Utc), CreatedByName = "Jane Smith" },
+            new Suggestion { Id = 12, IsDemoData = true, Title = "Kids Transport — Tembisa to YVEDA",   Description = "Reliable transport for kids to SA Young Vision Elite Development Academy (YVEDA). Tembisa pickup routes available. R300/month. Verified driver, police clearance held. WhatsApp to book.", Category = "Transport", Location = "Tembisa, Kempton Park",  CreatedAt = new DateTime(2025, 3, 30,  7,  0, 0, DateTimeKind.Utc), CreatedByName = "Mike Johnson" }
         );
 
         modelBuilder.Entity<Routine>().HasData(

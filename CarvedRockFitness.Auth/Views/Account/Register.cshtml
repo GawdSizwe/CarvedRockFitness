@@ -1,0 +1,167 @@
+@model CarvedRockFitness.Auth.Controllers.RegisterViewModel
+@{
+    ViewData["Title"] = "Create Account";
+    Layout = "_Layout";
+}
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+        <div class="auth-card p-4 p-md-5">
+            <h2 class="fw-bold text-center mb-1" style="color:var(--text-1)">Join the Community</h2>
+            <p class="text-center mb-4" style="color:var(--text-3);font-size:.9rem">Start your fitness journey — it's free</p>
+
+            <form asp-controller="Account" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label">
+                        <i class="bi bi-person me-1" style="color:var(--gym-orange)"></i>Full Name
+                    </label>
+                    <input asp-for="FullName" class="form-control" placeholder="John Doe" autocomplete="name" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">
+                        <i class="bi bi-envelope me-1" style="color:var(--gym-orange)"></i>Email Address
+                    </label>
+                    <input asp-for="Email" class="form-control" placeholder="you@example.com" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">
+                        <i class="bi bi-lock me-1" style="color:var(--gym-orange)"></i>Password
+                    </label>
+                    <div class="input-group">
+                        <input asp-for="Password" id="pw-field" class="form-control border-end-0"
+                               placeholder="Create a strong password" autocomplete="new-password"
+                               oninput="onPwInput(this.value)"
+                               onfocus="document.getElementById('pw-reqs').classList.add('visible')" />
+                        <button type="button" onclick="togglePw('pw-field','pw-icon')"
+                                style="background:var(--bg-input);border:1px solid var(--border);border-left:0;border-radius:0 10px 10px 0;cursor:pointer;color:var(--text-3);padding:0 12px">
+                            <i class="bi bi-eye" id="pw-icon"></i>
+                        </button>
+                    </div>
+
+                    @*Strength bar*@
+                    <div class="mt-2" style="background:var(--border);border-radius:3px;height:4px;overflow:hidden">
+                        <div id="pw-strength-bar" style="height:100%;width:0%;border-radius:3px;transition:all .35s"></div>
+                    </div>
+                    <div id="pw-strength-label" class="mt-1" style="font-size:.72rem;color:var(--text-3);min-height:1rem"></div>
+
+                    @*Bank-level requirements panel*@
+                    <div id="pw-reqs" class="pw-requirements">
+                        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gym-orange);margin-bottom:.4rem">
+                            Password Requirements
+                        </div>
+                        <div class="pw-req unmet" id="req-len">
+                            <i class="bi bi-x-circle-fill" id="ico-len"></i>At least 8 characters
+                        </div>
+                        <div class="pw-req unmet" id="req-upper">
+                            <i class="bi bi-x-circle-fill" id="ico-upper"></i>One uppercase letter (A–Z)
+                        </div>
+                        <div class="pw-req unmet" id="req-lower">
+                            <i class="bi bi-x-circle-fill" id="ico-lower"></i>One lowercase letter (a–z)
+                        </div>
+                        <div class="pw-req unmet" id="req-num">
+                            <i class="bi bi-x-circle-fill" id="ico-num"></i>One number (0–9)
+                        </div>
+                        <div class="pw-req unmet" id="req-sym">
+                            <i class="bi bi-x-circle-fill" id="ico-sym"></i>One special character (!&#64;#$%^&amp;*)
+                        </div>
+                    </div>
+
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="ConfirmPassword" class="form-label">
+                        <i class="bi bi-lock-fill me-1" style="color:var(--gym-orange)"></i>Confirm Password
+                    </label>
+                    <div class="input-group">
+                        <input asp-for="ConfirmPassword" id="cpw-field" class="form-control border-end-0"
+                               placeholder="Repeat password" autocomplete="new-password" />
+                        <button type="button" onclick="togglePw('cpw-field','cpw-icon')"
+                                style="background:var(--bg-input);border:1px solid var(--border);border-left:0;border-radius:0 10px 10px 0;cursor:pointer;color:var(--text-3);padding:0 12px">
+                            <i class="bi bi-eye" id="cpw-icon"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-gym btn-lg">
+                        <i class="bi bi-person-plus-fill"></i>Create Account
+                    </button>
+                </div>
+
+                <p style="font-size:.75rem;color:var(--text-3);text-align:center">
+                    By creating an account you agree to our terms of service.
+                </p>
+            </form>
+
+            <div class="text-center auth-divider">
+                Already have an account?
+                <a asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" class="gym-link">Sign in</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePw(fieldId, iconId) {
+            var f = document.getElementById(fieldId);
+            var i = document.getElementById(iconId);
+            f.type = f.type === 'password' ? 'text' : 'password';
+            i.className = f.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+        }
+
+        var rules = [
+            { id: 'req-len',   ico: 'ico-len',   test: function(v){ return v.length >= 8; } },
+            { id: 'req-upper', ico: 'ico-upper',  test: function(v){ return /[A-Z]/.test(v); } },
+            { id: 'req-lower', ico: 'ico-lower',  test: function(v){ return /[a-z]/.test(v); } },
+            { id: 'req-num',   ico: 'ico-num',    test: function(v){ return /[0-9]/.test(v); } },
+            { id: 'req-sym',   ico: 'ico-sym',    test: function(v){ return /[^A-Za-z0-9]/.test(v); } }
+        ];
+
+        var strengthColors = ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#22c55e'];
+        var strengthLabels = ['', 'Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
+
+        function onPwInput(val) {
+            var score = 0;
+            rules.forEach(function(r) {
+                var ok = r.test(val);
+                var row = document.getElementById(r.id);
+                var ico = document.getElementById(r.ico);
+                if (ok) {
+                    row.className = 'pw-req met';
+                    ico.className = 'bi bi-check-circle-fill';
+                    score++;
+                } else {
+                    row.className = 'pw-req unmet';
+                    ico.className = 'bi bi-x-circle-fill';
+                }
+            });
+
+            var bar   = document.getElementById('pw-strength-bar');
+            var label = document.getElementById('pw-strength-label');
+            if (val.length === 0) {
+                bar.style.width = '0%';
+                label.textContent = '';
+            } else {
+                bar.style.width = (score * 20) + '%';
+                bar.style.background = strengthColors[score - 1] || '#ef4444';
+                label.textContent = strengthLabels[score] || '';
+                label.style.color = strengthColors[score - 1] || '#ef4444';
+            }
+
+            if (val.length > 0) {
+                document.getElementById('pw-reqs').classList.add('visible');
+            }
+        }
+    </script>
+}

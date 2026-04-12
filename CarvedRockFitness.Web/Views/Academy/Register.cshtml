@@ -1,0 +1,101 @@
+@model CarvedRockFitness.Web.Controllers.AcademyRegisterRequest
+@{
+    ViewData["Title"] = "Register — YVEDA Academy";
+}
+
+<div class="container py-5" style="max-width:680px">
+    <div class="gym-section-head mb-4">
+        <div class="gym-section-dot"></div>
+        <h2><i class="bi bi-person-plus-fill me-2" style="color:var(--gym-orange)"></i>Register Your Child</h2>
+    </div>
+
+    <form asp-action="Register" method="post">
+        <div class="gym-detail-card mb-4">
+            <h6 class="fw-bold mb-3" style="color:var(--text-1)">Player Details</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="gym-label form-label">Player Full Name *</label>
+                    <input asp-for="PlayerName" class="form-control gym-input" placeholder="e.g. Sipho Dlamini" required />
+                    <span asp-validation-for="PlayerName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label class="gym-label form-label">Age *</label>
+                    <input asp-for="Age" type="number" min="5" max="22" class="form-control gym-input" placeholder="e.g. 12" required />
+                    <span asp-validation-for="Age" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label class="gym-label form-label">Sport *</label>
+                    <select asp-for="Sport" class="form-select gym-select" required>
+                        <option value="">Choose…</option>
+                        <option>Football</option>
+                        <option>Cricket</option>
+                        <option>Athletics</option>
+                        <option>Tennis</option>
+                    </select>
+                    <span asp-validation-for="Sport" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="gym-detail-card mb-4">
+            <h6 class="fw-bold mb-3" style="color:var(--text-1)">Parent / Guardian Details</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="gym-label form-label">Parent Name *</label>
+                    <input asp-for="ParentName" class="form-control gym-input" placeholder="e.g. Nomsa Dlamini" required />
+                    <span asp-validation-for="ParentName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="gym-label form-label">WhatsApp / Phone *</label>
+                    <input asp-for="ParentPhone" type="tel" class="form-control gym-input" placeholder="e.g. 083 123 4567" required />
+                    <span asp-validation-for="ParentPhone" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label class="gym-label form-label">Email Address *</label>
+                    <input asp-for="ParentEmail" type="email" class="form-control gym-input" placeholder="e.g. parent@email.com" required />
+                    <span asp-validation-for="ParentEmail" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="gym-detail-card mb-4">
+            <h6 class="fw-bold mb-3" style="color:var(--text-1)">
+                <i class="bi bi-bus-front-fill me-2" style="color:var(--gym-orange)"></i>Transport (Optional)
+            </h6>
+            <div class="form-check mb-3">
+                <input asp-for="NeedsTransport" class="form-check-input" type="checkbox" id="needsTransport"
+                       onchange="document.getElementById('pickupGroup').style.display=this.checked?'block':'none'" />
+                <label class="form-check-label gym-label" for="needsTransport">
+                    My child needs transport to YVEDA — <strong>R300/month</strong>
+                </label>
+            </div>
+            <div id="pickupGroup" style="display:none">
+                <label class="gym-label form-label">Pickup Address / Area</label>
+                <input asp-for="PickupAddress" class="form-control gym-input" placeholder="e.g. 12 Mabedi St, Tembisa" />
+                <div class="form-text text-muted small mt-1">
+                    <i class="bi bi-info-circle me-1"></i>
+                    We'll confirm your route and driver assignment by WhatsApp within 24 hours.
+                </div>
+            </div>
+        </div>
+
+        <div class="gym-detail-card mb-4">
+            <label class="gym-label form-label">Additional Notes (optional)</label>
+            <textarea asp-for="Notes" class="form-control gym-input" rows="3"
+                      placeholder="Any medical conditions, allergies, or other info we should know…"></textarea>
+        </div>
+
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-gym btn-lg flex-grow-1">
+                <i class="bi bi-check-circle me-2"></i>Submit Registration
+            </button>
+            <a asp-action="Index" class="btn btn-gym-dark btn-lg">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

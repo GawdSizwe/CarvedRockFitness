@@ -1,0 +1,77 @@
+@model CarvedRockFitness.Auth.Controllers.LoginViewModel
+@{
+    ViewData["Title"] = "Sign In";
+    Layout = "_Layout";
+}
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+        <div class="auth-card p-4 p-md-5">
+            <h2 class="fw-bold text-center mb-1" style="color:var(--text-1)">Welcome Back</h2>
+            <p class="text-center mb-4" style="color:var(--text-3);font-size:.9rem">Sign in to your Gym Meetups account</p>
+
+            <form asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">
+                        <i class="bi bi-envelope me-1" style="color:var(--gym-orange)"></i>Email Address
+                    </label>
+                    <input asp-for="Email" class="form-control" placeholder="you@example.com" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Password" class="form-label">
+                        <i class="bi bi-lock me-1" style="color:var(--gym-orange)"></i>Password
+                    </label>
+                    <div class="input-group">
+                        <input asp-for="Password" id="pw-field" class="form-control border-end-0" placeholder="••••••••" autocomplete="current-password" />
+                        <button type="button" class="input-group-text" id="pw-toggle"
+                                onclick="togglePw()"
+                                style="background:var(--bg-input);border:1px solid var(--border);border-left:0;border-radius:0 10px 10px 0;cursor:pointer;color:var(--text-3)">
+                            <i class="bi bi-eye" id="pw-icon"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-gym btn-lg">
+                        <i class="bi bi-lightning-fill"></i>Sign In
+                    </button>
+                </div>
+            </form>
+
+            <div class="demo-creds mb-4">
+                <div class="demo-label"><i class="bi bi-info-circle me-1"></i>Demo Accounts</div>
+                <div class="demo-row"><span>Admin</span><strong>admin@gymmeetups.co.za / Admin@123</strong></div>
+                <div class="demo-row"><span>Premium</span><strong>paid@gymmeetups.co.za / Paid@123</strong></div>
+                <div class="demo-row"><span>Free</span><strong>free@gymmeetups.co.za / Free@123</strong></div>
+            </div>
+
+            <div class="text-center auth-divider">
+                Don't have an account?
+                <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" class="gym-link">Create one free</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePw() {
+            var f = document.getElementById('pw-field');
+            var i = document.getElementById('pw-icon');
+            if (f.type === 'password') {
+                f.type = 'text';
+                i.className = 'bi bi-eye-slash';
+            } else {
+                f.type = 'password';
+                i.className = 'bi bi-eye';
+            }
+        }
+    </script>
+}

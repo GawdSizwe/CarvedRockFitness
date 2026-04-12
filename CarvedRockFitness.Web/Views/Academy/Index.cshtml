@@ -1,0 +1,170 @@
+@{
+    ViewData["Title"] = "YVEDA Academy";
+}
+
+@if (TempData["RegisterSuccess"] != null)
+{
+    <div class="container pt-4">
+        <div class="alert alert-success d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            <span>@TempData["RegisterSuccess"]</span>
+        </div>
+    </div>
+}
+
+@* Hero *@
+<section class="gym-hero py-5">
+    <div class="container text-center">
+        <span class="gym-badge gym-badge-football mb-3 d-inline-flex">
+            <i class="bi bi-shield-fill-check me-1"></i>YVEDA ACADEMY
+        </span>
+        <h1 class="fw-black mb-3" style="font-size:clamp(2rem,7vw,3.2rem)">
+            SA Young Vision<br/><span style="color:var(--gym-orange)">Elite Development</span>
+        </h1>
+        <p class="text-muted mx-auto mb-4" style="max-width:560px;font-size:1.05rem">
+            Developing the next generation of South African athletes. Football, cricket, athletics
+            and more — with world-class coaching and safe transport for every child.
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a asp-action="Register" class="btn btn-gym btn-lg">
+                <i class="bi bi-person-plus-fill me-2"></i>Register Your Child
+            </a>
+            <a asp-controller="Payment" asp-action="Checkout" asp-route-plan="academy" class="btn btn-gym-dark btn-lg">
+                <i class="bi bi-bus-front-fill me-2"></i>Book Transport — R300/mo
+            </a>
+        </div>
+    </div>
+</section>
+
+@* Stats strip *@
+<div class="gym-stats-strip py-3 mb-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-center gap-4 text-center">
+            <div><div class="gym-stat-number" style="font-size:1.8rem">120+</div><div class="gym-stat-label">Active Players</div></div>
+            <div><div class="gym-stat-number" style="font-size:1.8rem">4</div><div class="gym-stat-label">Sports Offered</div></div>
+            <div><div class="gym-stat-number" style="font-size:1.8rem">8</div><div class="gym-stat-label">Qualified Coaches</div></div>
+            <div><div class="gym-stat-number" style="font-size:1.8rem">6</div><div class="gym-stat-label">Transport Routes</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+
+    @* Sports offered *@
+    <div class="gym-section-head mb-4">
+        <div class="gym-section-dot"></div>
+        <h2>Sports &amp; Programmes</h2>
+    </div>
+    <div class="row g-3 mb-5">
+        @{
+            var sports = new[]
+            {
+                ("Football",   "bi-dribbble",       "gym-badge-football",  "U10 · U14 · U18 · Senior", "Saturdays &amp; Sundays 8am–1pm"),
+                ("Cricket",    "bi-circle-fill",    "gym-badge-cricket",   "U12 · U16 · Senior",        "Saturdays 9am–3pm"),
+                ("Athletics",  "bi-person-walking", "gym-badge-running",   "U10 · U14 · Open",          "Tuesdays &amp; Thursdays 4pm"),
+                ("Tennis",     "bi-trophy-fill",    "gym-badge-tennis",    "Beginners · Intermediate",  "Wednesdays &amp; Saturdays"),
+            };
+        }
+        @foreach (var (name, icon, badge, groups, times) in sports)
+        {
+            <div class="col-sm-6 col-lg-3">
+                <div class="gym-card h-100">
+                    <div class="gym-card-img-placeholder" style="height:120px">
+                        <i class="bi @icon" style="font-size:2.4rem"></i>
+                    </div>
+                    <div class="card-body">
+                        <span class="gym-badge @badge mb-2">@name</span>
+                        <h6 class="fw-bold" style="color:var(--text-1)">@groups</h6>
+                        <p class="text-muted small mb-0"><i class="bi bi-clock me-1"></i>@Html.Raw(times)</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @* Transport section *@
+    <div class="gym-section-head mb-4">
+        <div class="gym-section-dot"></div>
+        <h2><i class="bi bi-bus-front-fill me-2" style="color:var(--gym-orange)"></i>Safe Kids Transport</h2>
+    </div>
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="gym-detail-card h-100">
+                <h5 class="fw-bold mb-3" style="color:var(--text-1)">How It Works</h5>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex gap-3">
+                        <div style="width:32px;height:32px;border-radius:50%;background:var(--gym-orange);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <span class="fw-bold text-white" style="font-size:.85rem">1</span>
+                        </div>
+                        <div><strong style="color:var(--text-1)">Book transport</strong><br/><span class="text-muted small">Register below and pay R300/month via PayFast</span></div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <div style="width:32px;height:32px;border-radius:50%;background:var(--gym-orange);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <span class="fw-bold text-white" style="font-size:.85rem">2</span>
+                        </div>
+                        <div><strong style="color:var(--text-1)">Driver picks up your child</strong><br/><span class="text-muted small">Verified, police-cleared driver on your route</span></div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <div style="width:32px;height:32px;border-radius:50%;background:var(--gym-orange);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <span class="fw-bold text-white" style="font-size:.85rem">3</span>
+                        </div>
+                        <div><strong style="color:var(--text-1)">Parent gets notified</strong><br/><span class="text-muted small">WhatsApp ping on pickup and safe arrival</span></div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <div style="width:32px;height:32px;border-radius:50%;background:var(--gym-orange);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <span class="fw-bold text-white" style="font-size:.85rem">4</span>
+                        </div>
+                        <div><strong style="color:var(--text-1)">Safe drop-off home</strong><br/><span class="text-muted small">Another WhatsApp on return — peace of mind</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="gym-detail-card h-100">
+                <h5 class="fw-bold mb-3" style="color:var(--text-1)">Active Routes</h5>
+                @{
+                    var routes = new[]
+                    {
+                        ("Tembisa CBD", "6:45am", "5:30pm"),
+                        ("Kwa-Thema", "6:50am", "5:35pm"),
+                        ("Ivory Park", "7:00am", "5:45pm"),
+                        ("Clayville", "7:10am", "5:50pm"),
+                        ("Rabie Ridge", "7:15am", "5:55pm"),
+                        ("Ebony Park", "7:20am", "6:00pm"),
+                    };
+                }
+                <div class="table-responsive">
+                    <table class="table gym-table mb-3">
+                        <thead>
+                            <tr><th>Pickup Area</th><th>Morning</th><th>Afternoon</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (area, morning, afternoon) in routes)
+                            {
+                                <tr>
+                                    <td style="color:var(--text-1)"><i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@area</td>
+                                    <td style="color:var(--text-3);font-size:.85rem">@morning</td>
+                                    <td style="color:var(--text-3);font-size:.85rem">@afternoon</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <a asp-controller="Payment" asp-action="Checkout" asp-route-plan="academy" class="btn btn-gym w-100">
+                    <i class="bi bi-bus-front-fill me-2"></i>Book a Seat — R300/month
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @* CTA register *@
+    <div class="gym-detail-card text-center py-5">
+        <i class="bi bi-person-plus-fill" style="font-size:2.5rem;color:var(--gym-orange)"></i>
+        <h3 class="fw-bold mt-3 mb-2" style="color:var(--text-1)">Ready to Join YVEDA?</h3>
+        <p class="text-muted mb-4">Fill in a quick registration form and we'll be in touch within 24 hours.</p>
+        <a asp-action="Register" class="btn btn-gym btn-lg">
+            <i class="bi bi-arrow-right me-2"></i>Register Now — It's Free
+        </a>
+    </div>
+
+</div>

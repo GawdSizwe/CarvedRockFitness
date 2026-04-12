@@ -1,7 +1,10 @@
+using CarvedRockFitness.API.DbContexts;
 using CarvedRockFitness.API.DTOs;
 using CarvedRockFitness.API.Exceptions;
 using CarvedRockFitness.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CarvedRockFitness.API.Controllers;
 
@@ -11,7 +14,8 @@ namespace CarvedRockFitness.API.Controllers;
 [ApiController]
 [Route("users")]
 [Produces("application/json")]
-public class UsersController(IUserService userService, ILogger<UsersController> logger) : ControllerBase
+[Authorize(Roles = "Admin")]
+public class UsersController(IUserService userService, ILogger<UsersController> logger, CarvedRockFitnessDbContext db) : ControllerBase
 {
     /// <summary>
     /// Retrieves all users
@@ -24,6 +28,28 @@ public class UsersController(IUserService userService, ILogger<UsersController> 
         logger.LogDebug("Getting all users");
         var users = await userService.GetAllUsersAsync(cancellationToken);
         return Ok(users);
+    }
+
+    /// <summary>
+    /// Returns a flat member summary for the admin dashboard
+    /// </summary>
+    [HttpGet("members")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMembers(CancellationToken ct)
+    {
+        var members = await db.Users
+            .Select(u => new
+            {
+                u.Id,
+                Name      = u.Name,
+                Email     = u.Email ?? "",
+                Role      = u.Role,
+                u.IsPaidUser,
+                IsBanned  = u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow
+            })
+            .OrderBy(u => u.Name)
+            .ToListAsync(ct);
+        return Ok(members);
     }
 
     /// <summary>
@@ -91,6 +117,30 @@ public class UsersController(IUserService userService, ILogger<UsersController> 
     {
         logger.LogDebug("Deleting user {UserId}", id);
         await userService.DeleteUserAsync(id, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Toggles a user's banned (lockout) status
+    /// </summary>
+    [HttpPatch("{id:int}/ban")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> BanUser(int id, CancellationToken ct)
+    {
+        var user = await db.Users.FindAsync([id], ct);
+        if (user == null) return NotFound();
+        if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
+        {
+            user.LockoutEnd    = null;
+            user.LockoutEnabled = false;
+        }
+        else
+        {
+            user.LockoutEnabled = true;
+            user.LockoutEnd     = DateTimeOffset.UtcNow.AddYears(100);
+        }
+        await db.SaveChangesAsync(ct);
         return NoContent();
     }
 }

@@ -1,0 +1,325 @@
+﻿@model List<SuggestionDto>
+@{
+    ViewData["Title"] = "Sport & Health Feed";
+    int page = (int)(ViewBag.CurrentPage ?? 1);
+    var banners = ViewBag.Banners as List<AdBannerDto> ?? new();
+    int bannerIdx = 0;
+    var categoryIcons = new Dictionary<string, (string icon, string css)>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["HIIT"]      = ("bi-fire",              "gym-badge-hiit"),
+        ["Yoga"]      = ("bi-peace",             "gym-badge-yoga"),
+        ["Strength"]  = ("bi-trophy-fill",       "gym-badge-strength"),
+        ["Running"]   = ("bi-person-walking",    "gym-badge-running"),
+        ["Boxing"]    = ("bi-shield-fill",       "gym-badge-boxing"),
+        ["CrossFit"]  = ("bi-lightning-fill",    "gym-badge-crossfit"),
+        ["Football"]  = ("bi-dribbble",          "gym-badge-football"),
+        ["Cricket"]   = ("bi-circle-fill",       "gym-badge-cricket"),
+        ["Cycling"]   = ("bi-bicycle",           "gym-badge-cycling"),
+        ["Tennis"]    = ("bi-bullseye",          "gym-badge-tennis"),
+        ["Swimming"]  = ("bi-water",             "gym-badge-swimming"),
+        ["Transport"] = ("bi-bus-front-fill",    "gym-badge-transport"),
+    };
+}
+
+@* ── HERO CAROUSEL ─────────────────────────────────────────── *@
+<div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="4500" style="max-height:420px;overflow:hidden">
+    <div class="carousel-indicators">
+        @for (int s = 0; s < 5; s++)
+        {
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="@s"
+                    class="@(s == 0 ? "active" : "")" aria-label="Slide @(s+1)"></button>
+        }
+    </div>
+    <div class="carousel-inner" style="min-height:340px">
+
+        @* Slide 1 — Football *@
+        <div class="carousel-item active">
+            <div class="gym-hero" style="min-height:340px">
+                <div class="container position-relative" style="z-index:1;padding-top:60px;padding-bottom:60px">
+                    <p class="text-uppercase fw-bold mb-2" style="color:var(--gym-orange);font-size:.75rem;letter-spacing:.12em">
+                        <i class="bi bi-geo-alt-fill me-1"></i>South Africa
+                    </p>
+                    <h1 class="mb-3">Find Your <span class="text-orange">Sport &amp; Fitness Tribe</span></h1>
+                    <p class="mb-4" style="color:rgba(255,255,255,.65);font-size:1rem;max-width:520px">
+                        Football, gym, running, cricket &amp; more — discover sport events, academies and fitness sessions near you.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        @if (User.Identity?.IsAuthenticated != true)
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-gym btn-lg"><i class="bi bi-lightning-fill"></i>Join Free</a>
+                        }
+                        else if (User.IsInRole("PaidUser") || User.IsInRole("Admin"))
+                        {
+                            <a asp-controller="Suggestion" asp-action="Create" class="btn btn-gym btn-lg"><i class="bi bi-plus-circle-fill"></i>Post a Listing</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Payment" asp-action="Checkout" class="btn btn-gym btn-lg"><i class="bi bi-lightning-fill"></i>Upgrade to Post</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Slide 2 — YVEDA Academy *@
+        <div class="carousel-item">
+            <div style="min-height:340px;background:linear-gradient(135deg,#0a2463 0%,#1a1a2e 100%);position:relative;display:flex;align-items:center">
+                <div class="container position-relative" style="z-index:1;padding-top:60px;padding-bottom:60px">
+                    <p class="text-uppercase fw-bold mb-2" style="color:#60a5fa;font-size:.75rem;letter-spacing:.12em">
+                        <i class="bi bi-shield-fill-check me-1"></i>YVEDA Academy
+                    </p>
+                    <h1 class="mb-3" style="color:#fff">Your Child Deserves <span style="color:#60a5fa">The Best Start</span></h1>
+                    <p class="mb-4" style="color:rgba(255,255,255,.65);font-size:1rem;max-width:520px">
+                        SA Young Vision Elite Development Academy — professional coaching, safe transport, and community. Tembisa &amp; Johannesburg.
+                    </p>
+                    <a asp-controller="Academy" asp-action="Index" class="btn btn-lg" style="background:#60a5fa;color:#0a2463;font-weight:700">
+                        <i class="bi bi-shield-fill-check me-2"></i>Explore YVEDA Academy
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @* Slide 3 — Post a Listing *@
+        <div class="carousel-item">
+            <div style="min-height:340px;background:linear-gradient(135deg,#1a0a00 0%,#2d1200 100%);position:relative;display:flex;align-items:center">
+                <div class="container position-relative" style="z-index:1;padding-top:60px;padding-bottom:60px">
+                    <p class="text-uppercase fw-bold mb-2" style="color:var(--gym-orange);font-size:.75rem;letter-spacing:.12em">
+                        <i class="bi bi-megaphone-fill me-1"></i>Grow Your Community
+                    </p>
+                    <h1 class="mb-3" style="color:#fff">Post Your <span class="text-orange">Sport &amp; Health</span> Listing</h1>
+                    <p class="mb-4" style="color:rgba(255,255,255,.65);font-size:1rem;max-width:520px">
+                        Football clubs, yoga classes, gym sessions, transport services — reach thousands of people in your area for just R149/month.
+                    </p>
+                    <a asp-controller="Payment" asp-action="Checkout" class="btn btn-gym btn-lg"><i class="bi bi-lightning-fill"></i>Get Premium — R149/mo</a>
+                </div>
+            </div>
+        </div>
+
+        @* Slide 4 — Township Sport *@
+        <div class="carousel-item">
+            <div style="min-height:340px;background:linear-gradient(135deg,#064e3b 0%,#022c22 100%);position:relative;display:flex;align-items:center">
+                <div class="container position-relative" style="z-index:1;padding-top:60px;padding-bottom:60px">
+                    <p class="text-uppercase fw-bold mb-2" style="color:#34d399;font-size:.75rem;letter-spacing:.12em">
+                        <i class="bi bi-people-fill me-1"></i>Township Sport
+                    </p>
+                    <h1 class="mb-3" style="color:#fff">Sport <span style="color:#34d399">Unites</span> Our Communities</h1>
+                    <p class="mb-4" style="color:rgba(255,255,255,.65);font-size:1rem;max-width:520px">
+                        Sunday league football in Soweto, cricket in Tembisa, cycling in Pretoria East — find your team and show up.
+                    </p>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-lg" style="background:#34d399;color:#022c22;font-weight:700">
+                        <i class="bi bi-compass-fill me-2"></i>Browse All Listings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @* Slide 5 — Free to Browse *@
+        <div class="carousel-item">
+            <div style="min-height:340px;background:linear-gradient(135deg,#1e1b4b 0%,#0f0d2a 100%);position:relative;display:flex;align-items:center">
+                <div class="container position-relative" style="z-index:1;padding-top:60px;padding-bottom:60px">
+                    <p class="text-uppercase fw-bold mb-2" style="color:#a78bfa;font-size:.75rem;letter-spacing:.12em">
+                        <i class="bi bi-star-fill me-1"></i>Always Free to Browse
+                    </p>
+                    <h1 class="mb-3" style="color:#fff">9 Cities. <span style="color:#a78bfa">1 Platform.</span></h1>
+                    <p class="mb-4" style="color:rgba(255,255,255,.65);font-size:1rem;max-width:520px">
+                        Johannesburg, Soweto, Tembisa, Pretoria, Cape Town and more. No app download needed — just browse and connect.
+                    </p>
+                    @if (User.Identity?.IsAuthenticated != true)
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-lg" style="background:#a78bfa;color:#0f0d2a;font-weight:700">
+                            <i class="bi bi-person-fill me-2"></i>Create Free Account
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-lg" style="background:#a78bfa;color:#0f0d2a;font-weight:700">
+                            <i class="bi bi-compass-fill me-2"></i>Explore the Feed
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+</div>
+
+<div class="gym-stats-strip">
+    <div class="container">
+        <div class="d-flex flex-wrap gap-4 py-1">
+            <div class="gym-stat-item">
+                <i class="bi bi-people-fill text-orange"></i>
+                <span><strong>@(Model?.Count > 0 ? "1 240+" : "0")</strong> Members</span>
+            </div>
+            <div class="gym-stat-sep d-none d-sm-block">·</div>
+            <div class="gym-stat-item">
+                <i class="bi bi-calendar-event-fill text-orange"></i>
+                <span><strong>@(Model?.Count ?? 0)</strong> Active Listings</span>
+            </div>
+            <div class="gym-stat-sep d-none d-sm-block">·</div>
+            <div class="gym-stat-item">
+                <i class="bi bi-geo-alt-fill text-orange"></i>
+                <span><strong>9</strong> Cities</span>
+            </div>
+            <div class="gym-stat-sep d-none d-sm-block">·</div>
+            <div class="gym-stat-item">
+                <i class="bi bi-star-fill text-orange"></i>
+                <span><strong>Free</strong> to browse</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+
+    @* ── Page 1, genuinely empty ──────────────────────────────── *@
+    @if (page == 1 && (Model == null || !Model.Any()))
+    {
+        <div class="gym-empty">
+            <div class="gym-empty-icon"><i class="bi bi-calendar2-plus"></i></div>
+            <h4 class="fw-bold mb-2" style="color:var(--text-1)">No listings posted yet</h4>
+            <p class="text-muted mb-4">Be the first to post a sport or fitness listing in your area and build your community.</p>
+            @if (User.IsInRole("PaidUser") || User.IsInRole("Admin"))
+            {
+                <a asp-controller="Suggestion" asp-action="Create" class="btn btn-gym">
+                    <i class="bi bi-plus-circle-fill"></i>Post the First Listing
+                </a>
+            }
+            else if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Payment" asp-action="Checkout" class="btn btn-gym">
+                    <i class="bi bi-lightning-fill"></i>Upgrade to Post
+                </a>
+            }
+        </div>
+    }
+
+    @* ── Page > 1, no more results ────────────────────────────── *@
+    @if (page > 1 && (Model == null || !Model.Any()))
+    {
+        <div class="gym-empty">
+            <div class="gym-empty-icon"><i class="bi bi-check2-all"></i></div>
+            <h4 class="fw-bold mb-2" style="color:var(--text-1)">You've seen all the listings!</h4>
+            <p class="text-muted mb-4">There are no more listings on page @(page). Head back to page 1 to browse from the top.</p>
+            <a asp-action="Index" asp-route-page="1" class="btn btn-gym">
+                <i class="bi bi-arrow-left me-1"></i>Back to Page 1
+            </a>
+        </div>
+    }
+
+    @* ── Cards ────────────────────────────────────────────────── *@
+    @if (Model != null && Model.Any())
+    {
+        <div class="gym-section-head mb-4">
+            <div class="gym-section-dot"></div>
+            <h2>Latest Listings</h2>
+            <span class="text-muted ms-auto" style="font-size:.83rem">Page @(page)</span>
+        </div>
+
+        <div class="row g-4">
+            @{ int cardIdx = 0; }
+            @foreach (var s in Model)
+            {
+                @if (cardIdx > 0 && cardIdx % 4 == 0 && banners.Any())
+                {
+                    var banner = banners[bannerIdx % banners.Count];
+                    bannerIdx++;
+                    <div class="col-12">
+                        <a href="@(banner.LinkUrl ?? "#")" target="_blank" rel="noopener"
+                           class="gym-ad-banner d-block" title="@banner.BusinessName">
+                            <img src="@banner.ImageUrl" alt="@banner.BusinessName" loading="lazy" />
+                            @if (!string.IsNullOrEmpty(banner.TagLine))
+                            {
+                                <div class="gym-ad-banner-overlay">
+                                    <span class="gym-ad-label"><i class="bi bi-megaphone-fill me-1"></i>Sponsored</span>
+                                    <span class="gym-ad-tagline">@banner.TagLine</span>
+                                </div>
+                            }
+                        </a>
+                    </div>
+                }
+
+                var cat    = s.Category ?? "default";
+                var (icon, badgeCss) = categoryIcons.TryGetValue(cat, out var ci)
+                    ? ci : ("bi-activity", "gym-badge-default");
+                var delay  = (cardIdx++ % 4) * 60;
+                <div class="col-sm-6 col-lg-4 col-xl-3">
+                    <div class="gym-card" style="animation-delay:@(delay)ms">
+                        @if (s.IsPinned)
+                        {
+                            <div class="gym-card-pinned-badge"><i class="bi bi-pin-fill"></i> Pinned</div>
+                        }
+                        @if (!string.IsNullOrEmpty(s.ImagePath))
+                        {
+                            <img src="@s.ImagePath" class="card-img-top" alt="@s.Title" loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="gym-card-img-placeholder">
+                                <i class="bi @icon" style="font-size:2.8rem"></i>
+                            </div>
+                        }
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="gym-badge @badgeCss"><i class="bi @icon"></i>@s.Category</span>
+                                @if (s.EventDate.HasValue)
+                                {
+                                    <span style="font-size:.72rem;color:var(--gym-orange);font-weight:600">
+                                        <i class="bi bi-calendar-event me-1"></i>@s.EventDate.Value.ToString("d MMM HH:mm")
+                                    </span>
+                                }
+                                else if (s.CreatedAt != default)
+                                {
+                                    <span style="font-size:.72rem;color:var(--text-3)">@s.CreatedAt.ToString("d MMM")</span>
+                                }
+                            </div>
+                            <h6 class="card-title mb-1">@s.Title</h6>
+                            <p class="card-text mb-0" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">
+                                @s.Description
+                            </p>
+                            <div class="gym-card-meta mt-2">
+                                <span><i class="bi bi-geo-alt-fill"></i>@s.Location</span>
+                                @if (!string.IsNullOrEmpty(s.PostedBy))
+                                {
+                                    <span><i class="bi bi-person-fill"></i>@s.PostedBy</span>
+                                }
+                            </div>
+                            <a asp-controller="Suggestion" asp-action="Details" asp-route-id="@s.Id"
+                               class="btn btn-gym btn-sm mt-auto w-100">
+                                View Listing<i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <nav class="mt-5 d-flex justify-content-center" aria-label="Meetups pages">
+            <ul class="pagination">
+                <li class="page-item @(page <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(page - 1)" aria-label="Previous">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                @for (int i = Math.Max(1, page - 2); i <= page + 2; i++)
+                {
+                    <li class="page-item @(i == page ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.Count < 12 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(page + 1)" aria-label="Next">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+
+</div>
+

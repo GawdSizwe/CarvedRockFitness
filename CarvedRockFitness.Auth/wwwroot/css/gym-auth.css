@@ -1,0 +1,260 @@
+/* ═══════════════════════════════════════════
+   GYM MEETUPS — Auth Server Styles
+   Premium split-card login experience
+═══════════════════════════════════════════ */
+
+:root {
+    --gym-orange:      #FF6B00;
+    --gym-orange-light:#ff8c38;
+    --gym-orange-glow: rgba(255,107,0,0.35);
+    --gym-orange-dim:  rgba(255,107,0,0.12);
+    --gym-border-o:    rgba(255,107,0,0.25);
+
+    --bg:       #0d1117;
+    --bg-card:  #161b22;
+    --bg-input: #1c2128;
+    --border:   #21262d;
+
+    --text-1: #e6edf3;
+    --text-2: #cdd9e5;
+    --text-3: #8b949e;
+
+    --radius-card: 20px;
+    --transition: 0.2s cubic-bezier(.4,0,.2,1);
+    --shadow-card: 0 8px 40px rgba(0,0,0,0.55);
+    --shadow-btn:  0 6px 20px var(--gym-orange-glow);
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+.gym-auth-body {
+    background-color: var(--bg);
+    background-image:
+        linear-gradient(160deg, rgba(13,17,23,0.96) 0%, rgba(35,12,0,0.88) 50%, rgba(13,17,23,0.97) 100%),
+        url("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1400&auto=format&fit=crop&q=60");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Brand header ── */
+.auth-header { position: relative; z-index: 1; }
+
+@keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0   var(--gym-orange-glow); }
+    70%  { box-shadow: 0 0 0 14px rgba(255,107,0,0); }
+    100% { box-shadow: 0 0 0 0   rgba(255,107,0,0); }
+}
+
+.auth-logo-mark {
+    width: 64px; height: 64px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--gym-orange), var(--gym-orange-light));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.9rem;
+    color: #fff;
+    animation: pulse-ring 2.8s ease-out infinite;
+    box-shadow: 0 4px 18px var(--gym-orange-glow);
+}
+
+.auth-wordmark {
+    font-size: 1.55rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-1);
+    line-height: 1;
+}
+
+.auth-tagline {
+    font-size: 0.78rem;
+    color: var(--text-3);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+}
+
+.text-orange { color: var(--gym-orange) !important; }
+
+/* ── Auth card ── */
+.auth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--gym-border-o);
+    border-radius: var(--radius-card);
+    color: var(--text-1);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+}
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gym-orange), var(--gym-orange-light), var(--gym-orange));
+    background-size: 200% 100%;
+    animation: shimmer-bar 3s linear infinite;
+}
+@keyframes shimmer-bar {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── Form controls ── */
+.auth-card .form-control,
+.auth-card .form-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    border-radius: 10px;
+    padding: 0.65rem 0.95rem;
+    font-size: 0.93rem;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.auth-card .form-control:focus,
+.auth-card .form-select:focus {
+    background: var(--bg-input);
+    border-color: var(--gym-orange);
+    color: var(--text-1);
+    box-shadow: 0 0 0 3px rgba(255,107,0,0.18);
+    outline: none;
+}
+.auth-card .form-control::placeholder { color: var(--text-3); }
+
+.auth-card label {
+    color: var(--text-2);
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+}
+
+/* ── Buttons ── */
+.btn-gym {
+    background: var(--gym-orange);
+    border-color: var(--gym-orange);
+    color: #fff !important;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.65rem 1.6rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-gym:hover {
+    background: var(--gym-orange-light);
+    border-color: var(--gym-orange-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-btn);
+}
+.btn-gym:active { transform: translateY(0); }
+
+/* ── Divider + links ── */
+.auth-divider {
+    color: var(--text-3);
+    font-size: 0.85rem;
+    position: relative;
+}
+.auth-divider::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--border);
+    margin: 0 auto 1rem;
+}
+
+a.gym-link {
+    color: var(--gym-orange);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition);
+}
+a.gym-link:hover { color: var(--gym-orange-light); }
+
+/* ── Alert / validation ── */
+.alert-danger {
+    background: rgba(239,68,68,0.1);
+    border-color: rgba(239,68,68,0.3);
+    color: #f87171;
+    border-radius: 10px;
+    font-size: 0.875rem;
+}
+.text-danger { color: #f87171 !important; }
+
+/* ── Demo credentials box ── */
+.demo-creds {
+    background: rgba(255,107,0,0.07);
+    border: 1px solid rgba(255,107,0,0.2);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+}
+.demo-creds .demo-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gym-orange);
+    margin-bottom: 0.4rem;
+}
+.demo-creds .demo-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-3);
+    padding: 2px 0;
+}
+.demo-creds .demo-row strong { color: var(--text-2); }
+
+/* ── Footer ── */
+.auth-footer { position: relative; z-index: 1; }
+
+/* ── Hide OpenIddict built-in Close/window.close button ── */
+form[action*="window.close"],
+button[onclick*="window.close"],
+input[value="Close"],
+button[value="Close"] {
+    display: none !important;
+}
+/* Targets the OpenIddict default error page "Close" submit button */
+body > form > button[type="submit"]:only-child,
+body > div > form > button[type="submit"]:only-child {
+    display: none !important;
+}
+
+/* ── Password requirements panel ── */
+.pw-requirements {
+    background: rgba(13,17,23,0.8);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    display: none;
+}
+.pw-requirements.visible { display: block; }
+.pw-req {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    color: var(--text-3);
+    transition: color 0.2s;
+}
+.pw-req i { font-size: 0.85rem; flex-shrink: 0; }
+.pw-req.met   { color: #22c55e; }
+.pw-req.met i { color: #22c55e; }
+.pw-req.unmet   { color: var(--text-3); }
+.pw-req.unmet i { color: #ef4444; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gym-orange); }

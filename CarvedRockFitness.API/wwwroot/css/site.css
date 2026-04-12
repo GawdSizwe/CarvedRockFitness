@@ -1,0 +1,50 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+}
+
+.card {
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+}
+
+footer {
+    margin-top: 3rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.btn-primary {
+    background-color: #212529;
+    border-color: #212529;
+}
+
+.btn-primary:hover {
+    background-color: #343a40;
+    border-color: #343a40;
+}
+
+.form-floating > label {
+    color: #6c757d;
+}
+
+.page-link {
+    color: #212529;
+}
+
+.page-item.active .page-link {
+    background-color: #212529;
+    border-color: #212529;
+}

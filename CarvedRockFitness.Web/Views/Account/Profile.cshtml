@@ -1,0 +1,96 @@
+@{
+    ViewData["Title"] = "My Profile";
+    var name  = User.Identity?.Name ?? "User";
+    var email = User.FindFirst("email")?.Value
+             ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+             ?? "";
+    var initials = string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                       .Take(2).Select(w => w[0])).ToUpper();
+    bool isAdmin = User.IsInRole("Admin");
+    bool isPaid  = User.IsInRole("PaidUser");
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-6">
+
+            <div class="gym-detail-card text-center mb-4">
+                <div class="gym-avatar">@initials</div>
+
+                <h3 class="fw-bold mb-1" style="color:var(--text-1)">@name</h3>
+                @if (!string.IsNullOrEmpty(email))
+                {
+                    <p class="text-muted mb-3" style="font-size:.9rem">@email</p>
+                }
+
+                <div class="mb-4">
+                    @if (isAdmin)
+                    {
+                        <span class="gym-role-admin"><i class="bi bi-shield-fill me-1"></i>Administrator</span>
+                    }
+                    else if (isPaid)
+                    {
+                        <span class="gym-role-paid"><i class="bi bi-lightning-fill me-1"></i>Premium Member</span>
+                    }
+                    else
+                    {
+                        <span class="gym-role-free"><i class="bi bi-person me-1"></i>Free Member</span>
+                    }
+                </div>
+
+                <div class="row g-3 text-start mb-4">
+                    <div class="col-4">
+                        <div class="gym-profile-stat">
+                            <strong>@(isAdmin ? "∞" : isPaid ? "✓" : "—")</strong>
+                            <span>@(isAdmin ? "Full Access" : isPaid ? "Premium" : "Free Plan")</span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="gym-profile-stat">
+                            <strong><i class="bi bi-geo-alt-fill" style="font-size:1.2rem"></i></strong>
+                            <span>South Africa</span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="gym-profile-stat">
+                            <strong><i class="bi bi-check-circle-fill" style="font-size:1.2rem"></i></strong>
+                            <span>Verified</span>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!isPaid && !isAdmin)
+                {
+                    <div class="p-3 mb-4 text-start" style="background:var(--gym-orange-dim);border-radius:var(--radius);border:1px solid var(--border-o)">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="gym-contact-icon flex-shrink-0">
+                                <i class="bi bi-lightning-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1" style="color:var(--text-1)">Unlock Premium Features</h6>
+                                <p class="text-muted small mb-3">Post sport &amp; fitness listings, reach your community, and grow your sessions.</p>
+                                <a asp-controller="Payment" asp-action="Checkout" class="btn btn-gym btn-sm">
+                                    <i class="bi bi-lightning-fill"></i>Upgrade — R149/mo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (isAdmin || isPaid)
+                {
+                    <div class="mb-4">
+                        <a asp-controller="Suggestion" asp-action="Create" class="btn btn-gym w-100 mb-2">
+                            <i class="bi bi-plus-circle-fill"></i>Post a New Listing
+                        </a>
+                    </div>
+                }
+
+                <a asp-controller="Account" asp-action="Logout" class="btn btn-gym-dark w-100">
+                    <i class="bi bi-box-arrow-right"></i>Sign Out
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
