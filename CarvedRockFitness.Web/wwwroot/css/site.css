@@ -29,3 +29,25 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* Mobile hamburger menu fix */
+.navbar-collapse {
+  background: #1a1a2e;
+  padding: 1rem;
+  border-radius: 0 0 12px 12px;
+}
+
+.navbar-toggler {
+  z-index: 1050;
+}
+
+@media (max-width: 991px) {
+  .navbar-collapse {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1040;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+}
