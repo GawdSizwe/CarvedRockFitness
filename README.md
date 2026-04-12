@@ -1,8 +1,13 @@
-# CarvedRock Fitness API
+# KasiMeetups (CarvedRock Fitness)
 
 <div align="center">
 
 ![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-13.0-239120?style=for-the-badge&logo=csharp&logoColor=white)
+![EF Core](https://img.shields.io/badge/EF_Core-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![OpenIddict](https://img.shields.io/badge/OpenIddict-5.4-blue?style=for-the-badge)
+![Fly.io](https://img.shields.io/badge/Fly.io-Deployed-8B5CF6?style=for-the-badge)
 ![C#](https://img.shields.io/badge/C%23-13.0-239120?style=for-the-badge&logo=csharp&logoColor=white)
 ![EF Core](https://img.shields.io/badge/EF_Core-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![SQL Server](https://img.shields.io/badge/SQL_Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
@@ -59,6 +64,58 @@ CarvedRock Fitness API is a **production-ready** backend service built with ente
 ---
 
 ## 🏗️ Architecture
+
+### Three-Service Architecture (Production - Fly.io)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           CLIENT LAYER                                      │
+│                    ┌─────────────────────────────────┐                    │
+│                    │    https://gawdsizwe-web.fly.dev  │                    │
+│                    │         (Blazor Web App)          │                    │
+│                    └──────────────┬────────────────────┘                    │
+└───────────────────────────────────┼─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          AUTHENTICATION LAYER                               │
+│                    ┌─────────────────────────────────┐                    │
+│                    │   https://gawdsizwe-auth.fly.dev  │                    │
+│                    │      (OpenIddict OIDC Server)     │                    │
+│                    │   • Authorization endpoint         │                    │
+│                    │   • Token endpoint                 │                    │
+│                    │   • UserInfo endpoint              │                    │
+│                    └──────────────┬────────────────────┘                    │
+└───────────────────────────────────┼─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           API LAYER                                         │
+│                    ┌─────────────────────────────────┐                    │
+│                    │   https://gawdsizwe-api.fly.dev   │                    │
+│                    │       (REST API + Swagger)        │                    │
+│                    │   • JWT Bearer authentication      │                    │
+│                    │   • PostgreSQL persistence         │                    │
+│                    │   • Rate limiting + caching        │                    │
+│                    └───────────────────────────────────┘                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        DATABASE LAYER                                       │
+│                    ┌─────────────────────────────────┐                    │
+│                    │     Fly.io Postgres Cluster     │                    │
+│                    └───────────────────────────────────┘                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Live Endpoints
+
+| Service | URL | Health Check |
+|---------|-----|--------------|
+| Web App | https://gawdsizwe-web.fly.dev | /healthz |
+| Auth Server | https://gawdsizwe-auth.fly.dev | /healthz |
+| API | https://gawdsizwe-api.fly.dev | /healthz |
 
 ### Design Principles
 
@@ -425,7 +482,78 @@ private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
 ---
 
-## 📝 License
+## � Deployment (Fly.io)
+
+### Fly.io CLI Commands
+
+```powershell
+# Deploy all services
+$env:PATH += ";$env:USERPROFILE\.fly\bin"
+
+# Deploy Auth Server
+cd CarvedRockFitness.Auth
+flyctl deploy --remote-only --app gawdsizwe-auth --wait-timeout 300
+
+# Deploy API
+cd ..\CarvedRockFitness.API
+flyctl deploy --remote-only --app gawdsizwe-api --wait-timeout 300
+
+# Deploy Web
+cd ..\CarvedRockFitness.Web
+flyctl deploy --remote-only --app gawdsizwe-web --wait-timeout 300
+
+# View logs
+flyctl logs --app gawdsizwe-auth
+flyctl logs --app gawdsizwe-api
+flyctl logs --app gawdsizwe-web
+
+# Database access
+flyctl postgres connect -a gym-db -d <database_name>
+```
+
+### Production Secrets (Fly.io)
+
+| Service | Secret | Purpose |
+|---------|--------|---------|
+| Auth | `DATABASE_URL` | PostgreSQL connection string |
+| Auth | `SIGNING_CERT_PASSWORD` | RSA certificate password |
+| API | `DATABASE_URL` | PostgreSQL connection string |
+| API | `Auth:Authority` | `https://gawdsizwe-auth.fly.dev` |
+| Web | `OIDC:Authority` | `https://gawdsizwe-auth.fly.dev` |
+| Web | `Api:BaseUrl` | `https://gawdsizwe-api.fly.dev` |
+| Web | `PayFast:MerchantId` | **REQUIRED** - PayFast merchant ID |
+| Web | `PayFast:MerchantKey` | **REQUIRED** - PayFast merchant key |
+
+### Known Issues & Fixes Applied
+
+| Issue | Root Cause | Fix Applied |
+|-------|------------|-------------|
+| **OIDC redirect_uri mismatch (ID2043)** | Web app detected `http://` behind Fly proxy | Added `ForwardedHeaders` middleware, cleared `KnownNetworks`/`KnownProxies` |
+| **Token endpoint HTTP method invalid (ID2084)** | `UseHttpsRedirection` converted POST→GET via 301 | Removed `UseHttpsRedirection`, added `ForwardedHeaders` to Auth |
+| **ResponseMode form_post failure** | Fly proxy blocks POST callbacks | Changed to `ResponseMode.Query` |
+| **API database nvarchar error** | Migrations written for SQL Server, not PostgreSQL | Wrapped `EnsureCreated` in try/catch, skipped SQL Server migrations |
+| **PayFast 400 Bad Request** | Missing `PayFast:MerchantId` and `PayFast:MerchantKey` secrets | **TODO**: Set these Fly.io secrets |
+
+### Checking Signed-Up Users (Database)
+
+```powershell
+# Connect to database
+flyctl postgres connect -a gym-db -d <dbname>
+
+# List users
+SELECT "Id", "UserName", "Email", "EmailConfirmed", "IsPaidUser" FROM "AspNetUsers";
+
+# Promote to Admin (replace USER_ID with actual ID)
+INSERT INTO "AspNetUserRoles" ("UserId", "RoleId")
+SELECT 'USER_ID_HERE', "Id" FROM "AspNetRoles" WHERE "Name" = 'Admin';
+
+# Mark as paid
+UPDATE "AspNetUsers" SET "IsPaidUser" = true WHERE "Id" = 'USER_ID_HERE';
+```
+
+---
+
+## �📝 License
 
 This project is licensed under the MIT License.
 
