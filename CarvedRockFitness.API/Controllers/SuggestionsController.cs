@@ -23,7 +23,7 @@ public class SuggestionsController(
 
     [HttpGet]
     [AllowAnonymous]
-    [EnableRateLimiting("read")]
+    [EnableRateLimiting("general-read")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSuggestions([FromQuery] int page = 1, CancellationToken ct = default)
     {
@@ -123,7 +123,7 @@ public class SuggestionsController(
 
     [HttpPost]
     [Authorize]
-    [EnableRateLimiting("write")]
+    [EnableRateLimiting("suggestions-write")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CreateSuggestion([FromBody] CreateSuggestionRequest request, CancellationToken ct = default)

@@ -100,19 +100,82 @@ try
     // Register application services (repositories, services, caching)
     builder.Services.AddApplicationServices();
 
-    builder.Services.AddHealthChecks();
+    // Health checks — liveness (self) + readiness (DB connectivity)
+    builder.Services.AddHealthChecks()
+        .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("API is running"))
+        .AddDbContextCheck<CarvedRockFitnessDbContext>("database");
 
+    // Per-endpoint rate limiting — sliding window, IP-keyed, with Retry-After + structured logging
     builder.Services.AddRateLimiter(options =>
     {
-        options.AddPolicy("read", context => RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "anon",
-            _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1) }));
+        static string GetIp(HttpContext ctx) =>
+            ctx.Connection.RemoteIpAddress?.ToString() ?? "anon";
 
-        options.AddPolicy("write", context => RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "anon",
-            _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+        // General reads — 100 req/min per IP
+        options.AddPolicy("general-read", context => RateLimitPartition.GetSlidingWindowLimiter(
+            GetIp(context),
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 100, Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6, QueueLimit = 0
+            }));
 
-        options.RejectionStatusCode = 429;
+        // Admin endpoints — 30 req/min per IP
+        options.AddPolicy("admin", context => RateLimitPartition.GetSlidingWindowLimiter(
+            GetIp(context),
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 30, Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6, QueueLimit = 0
+            }));
+
+        // Suggestions POST — 5 per 10 min per IP
+        options.AddPolicy("suggestions-write", context => RateLimitPartition.GetSlidingWindowLimiter(
+            GetIp(context),
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 5, Window = TimeSpan.FromMinutes(10),
+                SegmentsPerWindow = 5, QueueLimit = 0
+            }));
+
+        // Ratings POST — 10 per 10 min per IP
+        options.AddPolicy("ratings-write", context => RateLimitPartition.GetSlidingWindowLimiter(
+            GetIp(context),
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 10, Window = TimeSpan.FromMinutes(10),
+                SegmentsPerWindow = 5, QueueLimit = 0
+            }));
+
+        // Academy registration POST — 3 per 10 min per IP
+        options.AddPolicy("academy-register", context => RateLimitPartition.GetSlidingWindowLimiter(
+            GetIp(context),
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 3, Window = TimeSpan.FromMinutes(10),
+                SegmentsPerWindow = 5, QueueLimit = 0
+            }));
+
+        // Driver applications POST — 5 per 10 min per IP
+        options.AddPolicy("drivers-write", context => RateLimitPartition.GetSlidingWindowLimiter(
+            GetIp(context),
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 5, Window = TimeSpan.FromMinutes(10),
+                SegmentsPerWindow = 5, QueueLimit = 0
+            }));
+
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.OnRejected = async (context, cancellationToken) =>
+        {
+            context.HttpContext.Response.Headers["Retry-After"] = "60";
+            await context.HttpContext.Response.WriteAsync(
+                "Rate limit exceeded. Please try again later.", cancellationToken);
+            Log.Warning("Rate limit exceeded: {Method} {Path} from {IP}",
+                context.HttpContext.Request.Method,
+                context.HttpContext.Request.Path,
+                context.HttpContext.Connection.RemoteIpAddress);
+        };
     });
 
     // Swagger/OpenAPI documentation
@@ -352,7 +415,26 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
-    app.MapHealthChecks("/healthz");
+
+    // Liveness — is the process up?
+    app.MapHealthChecks("/healthz/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Name == "self",
+        ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
+    }).AllowAnonymous();
+
+    // Readiness — is the DB reachable?
+    app.MapHealthChecks("/healthz/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Name == "database",
+        ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
+    }).AllowAnonymous();
+
+    // Overall — all checks combined (Grafana polls this)
+    app.MapHealthChecks("/healthz", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
+    }).AllowAnonymous();
 
     app.Run();
 }
@@ -367,3 +449,4 @@ finally
 
 // Make Program class accessible for integration tests
 public partial class Program { }
+

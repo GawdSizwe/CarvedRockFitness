@@ -3,6 +3,7 @@ using CarvedRockFitness.API.Entities;
 using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarvedRockFitness.API.Controllers;
@@ -18,6 +19,7 @@ public class DriversController(
     // ── Public: list active drivers (for the Academy transport section) ──
     [HttpGet]
     [AllowAnonymous]
+    [EnableRateLimiting("general-read")]
     public async Task<IActionResult> GetDrivers(CancellationToken ct)
     {
         var showDemo = settings.DemoSuggestionsVisible;
@@ -38,6 +40,7 @@ public class DriversController(
     // ── Public: submit a driver application ──
     [HttpPost("apply")]
     [AllowAnonymous]
+    [EnableRateLimiting("drivers-write")]
     public async Task<IActionResult> Apply([FromBody] DriverApplyRequest request, CancellationToken ct)
     {
         var app = new DriverApplication
@@ -65,6 +68,7 @@ public class DriversController(
     // ── Admin: list all drivers ──
     [HttpGet("admin/all")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("admin")]
     public async Task<IActionResult> GetAllDrivers(CancellationToken ct)
     {
         var drivers = await db.Drivers
@@ -83,6 +87,7 @@ public class DriversController(
     // ── Admin: list all applications ──
     [HttpGet("applications")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("admin")]
     public async Task<IActionResult> GetApplications(CancellationToken ct)
     {
         var apps = await db.DriverApplications

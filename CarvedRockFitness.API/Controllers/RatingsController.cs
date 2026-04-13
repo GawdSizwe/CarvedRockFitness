@@ -3,6 +3,7 @@ using CarvedRockFitness.API.Entities;
 using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarvedRockFitness.API.Controllers;
@@ -18,6 +19,7 @@ public class RatingsController(
 
     [HttpGet("drivers/{driverId:int}/ratings")]
     [AllowAnonymous]
+    [EnableRateLimiting("general-read")]
     public async Task<IActionResult> GetDriverRatings(int driverId, CancellationToken ct)
     {
         var showDemo = settings.DemoSuggestionsVisible;
@@ -33,6 +35,7 @@ public class RatingsController(
 
     [HttpGet("drivers/ratings/all")]
     [AllowAnonymous]
+    [EnableRateLimiting("general-read")]
     public async Task<IActionResult> GetAllDriverRatings(CancellationToken ct)
     {
         var showDemo = settings.DemoSuggestionsVisible;
@@ -64,6 +67,7 @@ public class RatingsController(
 
     [HttpPost("drivers/{driverId:int}/rate")]
     [AllowAnonymous]
+    [EnableRateLimiting("ratings-write")]
     public async Task<IActionResult> RateDriver(int driverId, [FromBody] RateDriverRequest request, CancellationToken ct)
     {
         if (request.Stars < 1 || request.Stars > 5)
@@ -102,6 +106,7 @@ public class RatingsController(
 
     [HttpGet("academy/reviews")]
     [AllowAnonymous]
+    [EnableRateLimiting("general-read")]
     public async Task<IActionResult> GetAcademyReviews(CancellationToken ct)
     {
         var showDemo = settings.DemoSuggestionsVisible;
@@ -117,6 +122,7 @@ public class RatingsController(
 
     [HttpPost("academy/reviews")]
     [AllowAnonymous]
+    [EnableRateLimiting("ratings-write")]
     public async Task<IActionResult> SubmitAcademyReview([FromBody] AcademyReviewRequest request, CancellationToken ct)
     {
         if (request.Stars < 1 || request.Stars > 5)

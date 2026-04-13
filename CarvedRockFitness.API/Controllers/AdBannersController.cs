@@ -3,6 +3,7 @@ using CarvedRockFitness.API.Entities;
 using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarvedRockFitness.API.Controllers;
@@ -14,6 +15,7 @@ public class AdBannersController(CarvedRockFitnessDbContext db, RuntimeSettingsS
 {
     [HttpGet]
     [AllowAnonymous]
+    [EnableRateLimiting("general-read")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBanners(CancellationToken ct = default)
     {
@@ -37,6 +39,7 @@ public class AdBannersController(CarvedRockFitnessDbContext db, RuntimeSettingsS
 
     [HttpGet("all")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllBanners(CancellationToken ct = default)
     {
@@ -48,6 +51,7 @@ public class AdBannersController(CarvedRockFitnessDbContext db, RuntimeSettingsS
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateBanner([FromBody] CreateBannerRequest req, CancellationToken ct = default)
     {

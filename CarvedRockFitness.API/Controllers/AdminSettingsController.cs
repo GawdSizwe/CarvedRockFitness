@@ -1,6 +1,7 @@
 using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace CarvedRockFitness.API.Controllers;
@@ -8,6 +9,7 @@ namespace CarvedRockFitness.API.Controllers;
 [ApiController]
 [Route("admin/settings")]
 [Authorize(Roles = "Admin")]
+[EnableRateLimiting("admin")]
 [Produces("application/json")]
 public class AdminSettingsController(RuntimeSettingsService settings, IDistributedCache cache) : ControllerBase
 {

@@ -3,6 +3,7 @@ using CarvedRockFitness.API.Entities;
 using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarvedRockFitness.API.Controllers;
@@ -17,6 +18,7 @@ public class AcademyController(
 {
     [HttpGet("stats")]
     [AllowAnonymous]
+    [EnableRateLimiting("general-read")]
     public async Task<IActionResult> GetStats(CancellationToken ct)
     {
         var showDemo = settings.DemoSuggestionsVisible;
@@ -45,6 +47,7 @@ public class AcademyController(
 
     [HttpPost("register")]
     [AllowAnonymous]
+    [EnableRateLimiting("academy-register")]
     public async Task<IActionResult> Register([FromBody] AcademyRegisterRequest request, CancellationToken ct)
     {
         var reg = new AcademyRegistration
@@ -71,6 +74,7 @@ public class AcademyController(
 
     [HttpGet("registrations")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("admin")]
     public async Task<IActionResult> GetRegistrations(CancellationToken ct)
     {
         var showDemo = settings.DemoSuggestionsVisible;

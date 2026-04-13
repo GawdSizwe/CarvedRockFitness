@@ -1,4 +1,4 @@
-# KasiMeetups — CarvedRock Fitness Platform
+ï»¿# KasiMeetups ï¿½ CarvedRock Fitness Platform
 
 <div align="center">
 
@@ -11,12 +11,12 @@
 
 **Enterprise-grade fitness community platform built on ASP.NET Core 9**
 
-*Clean Architecture · OAuth2/OpenID Connect · Role-Based Access · Live on Fly.io*
+*Clean Architecture ï¿½ OAuth2/OpenID Connect ï¿½ Role-Based Access ï¿½ Live on Fly.io*
 
-[Live Demo](#-live-demo) •
-[Architecture](#-architecture) •
-[Quick Start](#-quick-start) •
-[Features](#-features) •
+[Live Demo](#-live-demo) ï¿½
+[Architecture](#-architecture) ï¿½
+[Quick Start](#-quick-start) ï¿½
+[Features](#-features) ï¿½
 [Deployment](#-deployment)
 
 </div>
@@ -57,20 +57,20 @@
 
 ```
 +-----------------------------------------------------+
-¦                   Fly.io Cloud                      ¦
-¦                                                     ¦
-¦  +--------------+  OIDC   +----------------------+ ¦
-¦  ¦  Web App     ¦?-------?¦  Auth Server         ¦ ¦
-¦  ¦  (MVC/Razor) ¦         ¦  (OpenIddict 5.4)    ¦ ¦
-¦  ¦  :8080       ¦         ¦  :8080               ¦ ¦
-¦  +--------------+         +----------------------+ ¦
-¦         ¦ Bearer JWT                                ¦
-¦         ?                                           ¦
-¦  +--------------+         +----------------------+ ¦
-¦  ¦  REST API    ¦?-------?¦  PostgreSQL (Fly DB) ¦ ¦
-¦  ¦  (Web API)   ¦         ¦  gym-db              ¦ ¦
-¦  ¦  :8080       ¦         +----------------------+ ¦
-¦  +--------------+                                   ¦
+ï¿½                   Fly.io Cloud                      ï¿½
+ï¿½                                                     ï¿½
+ï¿½  +--------------+  OIDC   +----------------------+ ï¿½
+ï¿½  ï¿½  Web App     ï¿½?-------?ï¿½  Auth Server         ï¿½ ï¿½
+ï¿½  ï¿½  (MVC/Razor) ï¿½         ï¿½  (OpenIddict 5.4)    ï¿½ ï¿½
+ï¿½  ï¿½  :8080       ï¿½         ï¿½  :8080               ï¿½ ï¿½
+ï¿½  +--------------+         +----------------------+ ï¿½
+ï¿½         ï¿½ Bearer JWT                                ï¿½
+ï¿½         ?                                           ï¿½
+ï¿½  +--------------+         +----------------------+ ï¿½
+ï¿½  ï¿½  REST API    ï¿½?-------?ï¿½  PostgreSQL (Fly DB) ï¿½ ï¿½
+ï¿½  ï¿½  (Web API)   ï¿½         ï¿½  gym-db              ï¿½ ï¿½
+ï¿½  ï¿½  :8080       ï¿½         +----------------------+ ï¿½
+ï¿½  +--------------+                                   ï¿½
 +-----------------------------------------------------+
 ```
 
@@ -146,13 +146,13 @@ dotnet user-secrets set "ConnectionStrings:CarvedRockFitnessDbContextConnection"
 ### 3. Run all three
 
 ```powershell
-# Terminal 1 — Auth
+# Terminal 1 ï¿½ Auth
 cd CarvedRockFitness.Auth && dotnet run
 
-# Terminal 2 — API
+# Terminal 2 ï¿½ API
 cd CarvedRockFitness.API && dotnet run
 
-# Terminal 3 — Web
+# Terminal 3 ï¿½ Web
 cd CarvedRockFitness.Web && dotnet run
 ```
 
@@ -270,13 +270,13 @@ UPDATE "AspNetUsers" SET "IsPaidUser"=true WHERE "Id"='USER_ID';
 | Database | PostgreSQL | 16 |
 | Logging | Serilog | 8.0 |
 | UI | Bootstrap | 5.3 |
-| Deployment | Fly.io | — |
+| Deployment | Fly.io | ï¿½ |
 
 ---
 
 ## ?? License
 
-MIT License — © 2026 Sizwe Mazibuko
+MIT License ï¿½ ï¿½ 2026 Sizwe Mazibuko
 
 ---
 
@@ -284,6 +284,71 @@ MIT License — © 2026 Sizwe Mazibuko
 
 **Designed & Developed by Sizwe Mazibuko**
 
-*KasiMeetups / CarvedRock Fitness — Enterprise .NET Demo*
+*KasiMeetups / CarvedRock Fitness ï¿½ Enterprise .NET Demo*
 
 </div>
+
+---
+
+## ðŸ“¡ Observability
+
+### Health Check Endpoints
+
+| Endpoint | Purpose | Used By |
+|----------|---------|---------|
+| `GET /healthz` | Overall (all checks combined) | Grafana polling |
+| `GET /healthz/live` | Liveness â€” is the process up? | Fly.io health checks |
+| `GET /healthz/ready` | Readiness â€” is the DB reachable? | Grafana alerts |
+
+Response format (JSON via HealthChecks.UI):
+```json
+{
+  "status": "Healthy",
+  "totalDuration": "00:00:00.012",
+  "entries": {
+    "self":     { "status": "Healthy" },
+    "database": { "status": "Healthy" }
+  }
+}
+```
+
+### Rate Limiting (Per-Endpoint Sliding Window)
+
+All policies are **IP-keyed sliding window** â€” returns `429 Too Many Requests` with `Retry-After: 60` header on breach.
+
+| Policy | Applied To | Limit |
+|--------|-----------|-------|
+| `general-read` | All GET endpoints (public) | 100 req / 1 min |
+| `admin` | All Admin routes | 30 req / 1 min |
+| `suggestions-write` | `POST /suggestions` | 5 req / 10 min |
+| `ratings-write` | `POST /ratings` | 10 req / 10 min |
+| `academy-register` | `POST /academy/register` | 3 req / 10 min |
+| `drivers-write` | `POST /drivers/apply` | 5 req / 10 min |
+
+Rate limit breaches are logged as structured warnings:
+```
+[WARN] Rate limit exceeded: POST /academy/register from 196.x.x.x
+```
+
+### Grafana Alerts Setup (Fly.io)
+
+Fly.io includes built-in Grafana. To set up alerts:
+
+1. Open **Grafana** from your Fly.io dashboard nav
+2. Go to **Alerting â†’ Alert Rules â†’ New Rule**
+3. Add two rules:
+
+**Alert 1 â€” API Unhealthy**
+- Query: HTTP GET `https://gawdsizwe-api.fly.dev/healthz/ready`
+- Condition: response status != 200 OR body contains `"Unhealthy"`
+- Notify: `smazibuko01@gmail.com`
+
+**Alert 2 â€” High 429 Rate**
+- Query: `sum(rate(http_requests_total{status="429"}[5m]))`
+- Condition: > 5 per minute
+- Notify: `smazibuko01@gmail.com`
+
+4. Go to **Dashboards â†’ New Panel** and add:
+   - Panel title: *Request Rate by Endpoint*
+   - Metric: `http_requests_total` grouped by `path`
+
