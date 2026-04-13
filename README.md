@@ -5,13 +5,14 @@
 [![EF Core](https://img.shields.io/badge/EF_Core-9.0-512BD4?logo=dotnet)](https://docs.microsoft.com/ef/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?logo=postgresql)](https://www.postgresql.org)
 [![OpenIddict](https://img.shields.io/badge/OpenIddict-5.4-blueviolet)](https://github.com/openiddict/openiddict-core)
-[![Fly.io](https://img.shields.io/badge/Fly.io-LIVE-8B5CF6?logo=fly.io)](https://fly.io)
+[![Fly.io](https://img.shields.io/badge/Fly.io-LIVE-8B5CF6)](https://fly.io)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > **Enterprise-grade community platform** built on ASP.NET Core 9 — microservices architecture, OAuth2/OpenID Connect identity, role-based access control, per-endpoint rate limiting, and split health checks. Live in Johannesburg (JNB).
 >
-> _Clean Architecture · OAuth2/OpenID Connect · Role-Based Access · Live on Fly.io_
+> _Clean Architecture . OAuth2/OIDC . Role-Based Access . Per-Endpoint Rate Limiting . Live on Fly.io_
 
-[Live Demo](#live-demo) · [Architecture](#architecture) · [Quick Start](#quick-start) · [Features](#features) · [Deployment](#deployment) · [Observability](#observability)
+[Live Demo](#live-demo) . [Architecture](#architecture) . [Security](#security-architecture) . [Tech Stack](#technical-stack) . [Quick Start](#quick-start) . [Features](#features) . [Observability](#observability) . [Deployment](#deployment) . [Laws](#the-laws-behind-it)
 
 ---
 
@@ -28,72 +29,161 @@
 
 ## Live Demo
 
-| Service | URL | Status |
-|---------|-----|--------|
-| Web App | https://gawdsizwe-web.fly.dev | Live |
-| REST API | https://gawdsizwe-api.fly.dev | Live |
-| Auth Server | https://gawdsizwe-auth.fly.dev | Live |
-| API Health | https://gawdsizwe-api.fly.dev/healthz | Live |
-
-### Demo Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@kasimeetups.co.za | Admin1234! |
-| Member | member@kasimeetups.co.za | Member1234! |
+| Service | URL | Role |
+|---------|-----|------|
+| Web App | https://gawdsizwe-web.fly.dev | MVC Frontend |
+| REST API | https://gawdsizwe-api.fly.dev | Data + Business Logic |
+| Auth Server | https://gawdsizwe-auth.fly.dev | OAuth2 Identity Provider |
+| API Health | https://gawdsizwe-api.fly.dev/healthz | All Health Checks |
+| API Liveness | https://gawdsizwe-api.fly.dev/healthz/live | Process Alive? |
+| API Readiness | https://gawdsizwe-api.fly.dev/healthz/ready | DB Reachable? |
 
 ---
 
 ## Architecture
 
-Four independently deployed microservices — each with a single responsibility, zero shared state, all communicating over HTTPS with signed JWT tokens.
+### Microservices Topology
+
+Four independently deployed services. Zero shared state. All communication via signed JWT tokens.
 
 ```
 +------------------------------------------------------------------+
-|                         Fly.io Cloud (JNB)                       |
-|                                                                   |
-|  +------------------+   OIDC/OAuth2   +----------------------+  |
-|  |   gawdsizwe-web  | --------------> |  gawdsizwe-auth      |  |
-|  |                  |                 |                      |  |
-|  |  ASP.NET Core 9  |                 |  OpenIddict 5.4      |  |
-|  |  MVC + Razor     |                 |  OAuth2 / OIDC       |  |
-|  |  256MB · :8080   |                 |  512MB · :8080       |  |
-|  +--------+---------+                 +----------------------+  |
-|           |                                                       |
-|           |  Bearer JWT                                           |
-|           v                                                       |
-|  +------------------+                 +----------------------+  |
-|  |   gawdsizwe-api  | --------------> |      gym-db          |  |
-|  |                  |                 |                      |  |
-|  |  ASP.NET Core 9  |                 |  PostgreSQL          |  |
-|  |  REST Web API    |                 |  Fly Managed DB      |  |
-|  |  512MB · :8080   |                 |  1GB Storage         |  |
-|  +------------------+                 +----------------------+  |
-|                                                                   |
+|                       Fly.io Cloud (JNB Region)                  |
+|                                                                  |
+|  +-------------------+   OIDC/OAuth2   +--------------------+   |
+|  |  gawdsizwe-web    | --------------> | gawdsizwe-auth     |   |
+|  |                   |                 |                    |   |
+|  |  ASP.NET Core 9   |                 | OpenIddict 5.4     |   |
+|  |  MVC + Razor      |                 | OAuth2 / OIDC      |   |
+|  |  256MB . :8080    |                 | 512MB . :8080      |   |
+|  +--------+----------+                 +--------------------+   |
+|           |                                                      |
+|           | Bearer JWT (signed, stateless)                       |
+|           v                                                      |
+|  +-------------------+   EF Core 9     +--------------------+   |
+|  |  gawdsizwe-api    | --------------> | gym-db             |   |
+|  |                   |                 |                    |   |
+|  |  ASP.NET Core 9   |                 | PostgreSQL         |   |
+|  |  REST Web API     |                 | Fly Managed DB     |   |
+|  |  512MB . :8080    |                 | 1GB Storage        |   |
+|  +-------------------+                 +--------------------+   |
+|                                                                  |
 +------------------------------------------------------------------+
 ```
 
-### Why This Architecture?
+### Service Responsibilities
 
-| Principle | Implementation |
-|-----------|---------------|
-| **Single Responsibility** | Each service does one job — present, serve, authenticate, or store |
-| **Failure Isolation** | Auth outage does not affect API data serving |
-| **Independent Deployment** | Redeploy any service without touching others |
-| **Zero Shared State** | No shared memory, no shared session — only JWT claims |
-| **Database Ownership** | Only the API holds the DB connection string |
+| Service | Single Responsibility | Knows About |
+|---------|----------------------|-------------|
+| **Web** | Render HTML, handle user sessions | Auth + API endpoints only |
+| **API** | Business logic, data access, validation | Database only |
+| **Auth** | Issue and validate tokens | Users + roles only |
+| **Database** | Store data | Nothing else |
 
-### Internal N-Tier Structure (per service)
+> The frontend has never written a SQL query.
+> The database has never seen an HTTP request.
+> The auth server has never heard of meetups.
+> That is separation of concerns enforced at the deployment boundary.
+
+---
+
+### N-Tier Internal Structure (per service)
 
 ```
-Controller  (HTTP in/out — no business logic)
-    |
-Service Layer  (business rules — no DB knowledge)
-    |
-Repository / EF Core  (data access — no HTTP knowledge)
-    |
-PostgreSQL  (storage — knows nothing about the app)
++-----------------------------------------------+
+|              Controller Layer                  |
+|   - Receives HTTP requests                    |
+|   - Returns HTTP responses                    |
+|   - Zero business logic                       |
++------------------------+----------------------+
+                         |
+                         v
++-----------------------------------------------+
+|              Service Layer                     |
+|   - Business rules and validation             |
+|   - Orchestration between repositories        |
+|   - No HTTP knowledge, no DB knowledge        |
++------------------------+----------------------+
+                         |
+                         v
++-----------------------------------------------+
+|           Repository / EF Core 9               |
+|   - Database queries via LINQ                 |
+|   - Entity mapping and migrations             |
+|   - No business logic, no HTTP knowledge      |
++------------------------+----------------------+
+                         |
+                         v
++-----------------------------------------------+
+|              PostgreSQL (Fly Managed)           |
+|   - Storage only                              |
+|   - Knows nothing about HTTP or business rules|
++-----------------------------------------------+
 ```
+
+> Each tier only talks to the one directly below it.
+> A Controller never writes SQL. The database never knows about HTTP.
+
+---
+
+## Security Architecture
+
+### Authentication Flow
+
+```
++----------+        +------------+        +----------+
+|  Client  | -----> |   Auth     | -----> | Returns  |
+| (Browser)|  login |   Server   |  token |   JWT    |
++----------+        +------------+        +----+-----+
+                                               |
+                                    signed token (1hr TTL)
+                                               |
+                                               v
+                                         +----------+
+                                         |   API    |
+                                         | validates|
+                                         | signature|
+                                         | locally  |
+                                         +----+-----+
+                                              |
+                                    authorized by role?
+                                     +--------+--------+
+                                     |                 |
+                                    YES                NO
+                                     |                 |
+                                +----v-----+     +-----v------+
+                                |  200 OK  |     |    401     |
+                                |  Data    |     | Unauthorized|
+                                +----------+     +------------+
+```
+
+> The API validates the JWT signature locally.
+> It never calls the Auth server on every request.
+> That is zero auth latency after token issuance.
+
+### Role-Based Access Control
+
+| Role | Access Level | Example Actions |
+|------|-------------|-----------------|
+| **Admin** | Full platform control | Manage drivers, approve registrations, toggle settings |
+| **PaidUser** | Enhanced features | Submit suggestions, access premium content |
+| **FreeUser** | Public access | View meetups, browse drivers, read reviews |
+
+---
+
+## Technical Stack
+
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| ASP.NET Core | 9.0 | Web framework (Web + API + Auth) |
+| C# | 13.0 | Programming language |
+| Entity Framework Core | 9.0 | ORM + database migrations |
+| PostgreSQL | Latest | Primary database (Fly managed) |
+| OpenIddict | 5.4 | OAuth2 / OpenID Connect provider |
+| Serilog | Latest | Structured logging |
+| Redis | Optional | Distributed caching (fallback: in-memory) |
+| Razor Views | Built-in | Server-side UI rendering |
+| Bootstrap | 5.x | Responsive CSS framework |
 
 ---
 
@@ -103,7 +193,7 @@ PostgreSQL  (storage — knows nothing about the app)
 
 - .NET 9 SDK
 - PostgreSQL (or Docker)
-- Visual Studio 2022 / VS Code
+- Visual Studio 2022 / VS Code / Rider
 
 ### Run Locally
 
@@ -112,16 +202,16 @@ PostgreSQL  (storage — knows nothing about the app)
 git clone https://github.com/GawdSizwe/CarvedRockFitness.git
 cd CarvedRockFitness
 
-# Start Auth Server (port 5002)
+# Start Auth Server (terminal 1)
 cd CarvedRockFitness.Auth
 dotnet run
 
-# Start API (port 5001)
-cd ../CarvedRockFitness.API
+# Start API (terminal 2)
+cd CarvedRockFitness.API
 dotnet run
 
-# Start Web (port 5000)
-cd ../CarvedRockFitness.Web
+# Start Web (terminal 3)
+cd CarvedRockFitness.Web
 dotnet run
 ```
 
@@ -133,61 +223,13 @@ dotnet run
 
 | Module | Description | Access |
 |--------|-------------|--------|
-| **Meetups Feed** | Community event listings with pinning and categories | Public |
+| **Community Feed** | Event listings with pinning and categories | Public |
 | **Suggestions** | Submit and vote on community ideas | Authenticated |
-| **YVEDA Academy** | Sports academy registrations, stats, reviews | Public / Admin |
-| **Transport** | Driver listings, applications, route management | Public / Admin |
+| **YVEDA Academy** | Sports registrations, stats, reviews | Public / Admin |
+| **Transport** | Driver listings, applications, routes | Public / Admin |
 | **Ratings** | Star ratings for drivers and academy | Public |
 | **Admin Dashboard** | Full platform control panel | Admin only |
 | **Ad Banners** | Sponsored banner management | Admin only |
-
-### Security
-
-| Feature | Detail |
-|---------|--------|
-| **OAuth2 / OpenID Connect** | OpenIddict 5.4 — industry-standard token issuance |
-| **JWT Bearer Auth** | Stateless — API validates signature without calling Auth |
-| **Role-Based Access** | `Admin` · `PaidUser` · `FreeUser` enforced per endpoint |
-| **Per-Endpoint Rate Limiting** | 6 sliding window policies — see Observability section |
-| **HTTPS Enforced** | `force_https = true` on all Fly services |
-| **CORS Policy** | Scoped to known Web origin only |
-
----
-
-## Deployment
-
-### Fly.io Production Setup
-
-```bash
-# Deploy all three services
-flyctl deploy --app gawdsizwe-api
-flyctl deploy --app gawdsizwe-web
-flyctl deploy --app gawdsizwe-auth
-```
-
-### Environment Secrets
-
-```bash
-# API
-flyctl secrets set DATABASE_URL="postgres://..." --app gawdsizwe-api
-flyctl secrets set Auth__Authority="https://gawdsizwe-auth.fly.dev" --app gawdsizwe-api
-
-# Web
-flyctl secrets set Api__BaseUrl="https://gawdsizwe-api.fly.dev" --app gawdsizwe-web
-flyctl secrets set Auth__Authority="https://gawdsizwe-auth.fly.dev" --app gawdsizwe-web
-
-# Auth
-flyctl secrets set ConnectionStrings__DefaultConnection="postgres://..." --app gawdsizwe-auth
-```
-
-### Infrastructure
-
-| Component | Spec | Region |
-|-----------|------|--------|
-| Web App | 1 shared CPU · 256MB RAM | JNB |
-| REST API | 1 shared CPU · 512MB RAM | JNB |
-| Auth Server | 1 shared CPU · 512MB RAM | JNB |
-| PostgreSQL | Fly Managed DB · 1GB | JNB |
 
 ---
 
@@ -195,39 +237,62 @@ flyctl secrets set ConnectionStrings__DefaultConnection="postgres://..." --app g
 
 ### Health Check Endpoints
 
+```
+Fly.io ----> GET /healthz/live  ----> Process alive?  ----> YES / NO
+              (every 30s)
+
+Fly.io ----> GET /healthz/ready ----> DB reachable?   ----> YES / NO
+              (every 60s)                                      |
+                                                          NO = auto restart
+
+Grafana ---> GET /healthz       ----> All checks       ----> JSON response
+```
+
 | Endpoint | Purpose | Checked By |
 |----------|---------|------------|
 | `GET /healthz` | All checks combined | Grafana |
-| `GET /healthz/live` | Liveness — is the process up? | Fly.io (every 30s) |
-| `GET /healthz/ready` | Readiness — is the DB reachable? | Fly.io (every 60s) |
+| `GET /healthz/live` | Liveness -- is the process up? | Fly.io (every 30s) |
+| `GET /healthz/ready` | Readiness -- is the DB reachable? | Fly.io (every 60s) |
+
+Response format:
 
 ```json
 {
   "status": "Healthy",
   "totalDuration": "00:00:00.012",
   "entries": {
-    "self":     { "status": "Healthy" },
+    "self":     { "status": "Healthy", "description": "API is running" },
     "database": { "status": "Healthy" }
   }
 }
 ```
 
-Fly.io will **automatically restart** any machine that fails a health check — zero manual intervention required.
+> Fly.io will automatically restart any machine that fails a health check.
+> Zero manual intervention required.
 
 ### Rate Limiting
 
-All policies are **IP-keyed sliding window** — returns `429 Too Many Requests` with `Retry-After: 60` on breach.
+```
+Request ----> [Rate Limiter] ----> Allowed? ----> [Controller] ----> Response
+                   |
+                   NO
+                   |
+                   v
+             429 Too Many Requests
+             Retry-After: 60
+             Logged: IP + Path + Method
+```
 
-| Policy | Endpoint | Limit | Reason |
+All policies are **IP-keyed sliding window** -- returns `429 Too Many Requests` with `Retry-After: 60` on breach.
+
+| Policy | Endpoint | Limit | Threat |
 |--------|----------|-------|--------|
-| `general-read` | All public GETs | 100 / 1 min | Prevent scraping |
-| `admin` | All admin routes | 30 / 1 min | Block credential stuffing |
-| `suggestions-write` | `POST /suggestions` | 5 / 10 min | Anti-spam |
-| `ratings-write` | `POST /ratings` | 10 / 10 min | Anti-spam |
-| `academy-register` | `POST /academy/register` | 3 / 10 min | One registration per family |
-| `drivers-write` | `POST /drivers/apply` | 5 / 10 min | Deliberate action only |
-
-Rate limit breaches are logged as structured warnings — queryable in Fly.io log explorer.
+| `general-read` | All public GETs | 100 / 1 min | Scraping |
+| `admin` | All admin routes | 30 / 1 min | Credential stuffing |
+| `suggestions-write` | POST /suggestions | 5 / 10 min | Spam |
+| `ratings-write` | POST /ratings | 10 / 10 min | Fake reviews |
+| `academy-register` | POST /academy/register | 3 / 10 min | Bot registrations |
+| `drivers-write` | POST /drivers/apply | 5 / 10 min | Application flooding |
 
 ### Structured Logging (Serilog)
 
@@ -237,15 +302,64 @@ Rate limit breaches are logged as structured warnings — queryable in Fly.io lo
 [ERR] JWT validation failed: token expired
 ```
 
+> Every log entry is a queryable data point -- not a string.
+> Method, path, status, duration, and client IP are discrete fields.
+
 ---
 
-## Release History
+## Deployment
 
-| Tag | Description |
-|-----|-------------|
-| `v1.0.0` | OIDC baseline + Fly.io deployment |
-| `v2.0.0` | Academy, Transport, Ratings, Admin, Driver system |
-| `v2.1.0` | Per-endpoint rate limiting + health checks + observability |
+### Fly.io Production (JNB Region)
+
+```bash
+# Deploy each service from its own directory
+cd CarvedRockFitness.API  && flyctl deploy
+cd CarvedRockFitness.Web  && flyctl deploy
+cd CarvedRockFitness.Auth && flyctl deploy
+```
+
+### Infrastructure
+
+| Component | Spec | Region |
+|-----------|------|--------|
+| Web App | 1 shared CPU . 256MB RAM | JNB |
+| REST API | 1 shared CPU . 512MB RAM | JNB |
+| Auth Server | 1 shared CPU . 512MB RAM | JNB |
+| PostgreSQL | Fly Managed DB . 1GB | JNB |
+
+### Environment Secrets
+
+```bash
+flyctl secrets set DATABASE_URL="postgres://..." --app gawdsizwe-api
+flyctl secrets set Auth__Authority="https://gawdsizwe-auth.fly.dev" --app gawdsizwe-api
+flyctl secrets set Api__BaseUrl="https://gawdsizwe-api.fly.dev" --app gawdsizwe-web
+```
+
+---
+
+## The Laws Behind It
+
+Five foundational laws of computer science -- all five enforced at the infrastructure level, not just in code.
+
+| Law | Author | Year | How It Is Applied |
+|-----|--------|------|-------------------|
+| **Conway's Law** | Mel Conway | 1967 | 4 service boundaries designed before code -- the architecture mirrors 4 independent teams in 1 developer |
+| **Separation of Concerns** | Edsger Dijkstra | 1974 | The database has never seen HTTP. The frontend has never executed SQL. Hard boundaries, not soft suggestions. |
+| **Principle of Least Privilege** | Jerome Saltzer | 1975 | One service holds the DB connection string. The other three do not know the database exists. |
+| **Fallacies of Distributed Computing** | Peter Deutsch | 1994 | Health probes every 30s. Auto-restart on failure. Designed for the network to lie. |
+| **Single Responsibility Principle** | Robert C. Martin | 2003 | Each service has exactly one reason to change. Auth ships independently of API. API ships independently of Web. |
+
+---
+
+## How It Compares
+
+| Company | Their Architecture | This Platform |
+|---------|-------------------|---------------|
+| **Netflix** | Microservices, JWT, per-service auth, health gates | Same pattern. Different scale. |
+| **Uber** | Service isolation, stateless requests, structured logs | Same pattern. Different scale. |
+| **FNB / Standard Bank** | OAuth2, RBAC, least privilege, audit trail | Same pattern. Same country. |
+| **Seed-Stage Startups** | Monolith, basic JWT, no health checks | Already ahead of most funded companies. |
+| **Bootcamp Graduates** | CRUD, session auth, Heroku, no rate limiting | Three levels below this architecture. |
 
 ---
 
@@ -254,12 +368,32 @@ Rate limit breaches are logged as structured warnings — queryable in Fly.io lo
 | Decision | Choice | Why |
 |----------|--------|-----|
 | Auth framework | OpenIddict 5.4 | Full control, no SaaS dependency, production-grade |
-| ORM | EF Core 9 | Type-safe queries, migration support, EF health probes |
+| ORM | EF Core 9 | Type-safe queries, migration support, health probes |
 | Rate limiting | ASP.NET Core built-in | Zero extra dependencies, middleware-level enforcement |
 | Deployment | Fly.io (JNB) | Low latency for SA users, managed PostgreSQL, free tier |
 | Logging | Serilog | Structured output, queryable in production |
-| Token strategy | Stateless JWT | No session affinity — horizontally scalable |
+| Token strategy | Stateless JWT | No session affinity -- horizontally scalable |
+| Health checks | ASP.NET + HealthChecks.UI | JSON responses, split probes, Grafana-compatible |
 
 ---
 
-_Built for the KasiMeetups community platform — connecting Tembisa and surrounding areas through sport, transport, and culture._
+## Release History
+
+| Tag | Description |
+|-----|-------------|
+| `v1.0.0` | OIDC baseline + Fly.io deployment |
+| `v2.0.0` | Academy, Transport, Ratings, Admin, Driver system |
+| `v2.1.0` | Per-endpoint rate limiting + split health checks + observability |
+
+---
+
+> _Five laws. Written between 1967 and 2003._
+> _All five enforced at the infrastructure level._
+> _Not in a textbook. Not in a tutorial._
+> _Running in production. Johannesburg. Right now._
+>
+> _One platform. One developer. Tembisa._
+
+---
+
+_Built for the KasiMeetups community -- connecting Tembisa and surrounding areas through sport, transport, and culture._
