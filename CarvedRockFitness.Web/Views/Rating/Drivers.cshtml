@@ -1,0 +1,148 @@
+@using CarvedRockFitness.Web.Services
+@{
+    ViewData["Title"] = "Rate Your Driver";
+    var data = ViewBag.DriverRatings as DriverRatingsDto;
+    var drivers = data?.Drivers ?? new List<DriverRatingSummaryDto>();
+}
+
+@if (TempData["RateSuccess"] != null)
+{
+    <div class="container pt-4">
+        <div class="alert alert-success d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill fs-5"></i><span>@TempData["RateSuccess"]</span>
+        </div>
+    </div>
+}
+@if (TempData["RateError"] != null)
+{
+    <div class="container pt-4">
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i><span>@TempData["RateError"]</span>
+        </div>
+    </div>
+}
+
+<section class="gym-hero py-5">
+    <div class="container text-center">
+        <span class="gym-badge gym-badge-football mb-3 d-inline-flex">
+            <i class="bi bi-star-fill me-1"></i>DRIVER RATINGS
+        </span>
+        <h1 class="fw-black mb-3" style="font-size:clamp(1.8rem,5vw,2.8rem)">
+            Rate Your <span style="color:var(--gym-orange)">Child's Driver</span>
+        </h1>
+        <p class="text-muted mx-auto mb-0" style="max-width:520px">
+            Your feedback keeps our drivers accountable and helps other parents choose with confidence.
+        </p>
+    </div>
+</section>
+
+<div class="container pb-5 mt-5">
+
+    @if (!drivers.Any())
+    {
+        <div class="gym-detail-card text-center py-5">
+            <i class="bi bi-bus-front-fill" style="font-size:2rem;color:var(--gym-orange)"></i>
+            <p class="text-muted mt-3 mb-0">No active drivers to rate yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var driver in drivers)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="gym-detail-card h-100 d-flex flex-column">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <div style="width:44px;height:44px;border-radius:50%;background:rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <i class="bi bi-person-fill" style="color:var(--gym-orange);font-size:1.2rem"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="color:var(--text-1)">@driver.FullName</div>
+                                <div class="text-muted small"><i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@driver.Route</div>
+                                <div class="text-muted" style="font-size:.75rem">@(driver.Vehicle ?? "Vehicle not listed")</div>
+                            </div>
+                        </div>
+
+                        @* Average rating display *@
+                        <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded" style="background:rgba(255,255,255,.04)">
+                            @{
+                                var fullStars  = (int)Math.Floor(driver.Average);
+                                var hasHalf    = driver.Average - fullStars >= 0.5;
+                            }
+                            <div class="d-flex gap-1">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= fullStars)
+                                    { <i class="bi bi-star-fill" style="color:#f59e0b;font-size:.9rem"></i> }
+                                    else if (i == fullStars + 1 && hasHalf)
+                                    { <i class="bi bi-star-half" style="color:#f59e0b;font-size:.9rem"></i> }
+                                    else
+                                    { <i class="bi bi-star" style="color:#f59e0b;font-size:.9rem"></i> }
+                                }
+                            </div>
+                            <span class="fw-bold" style="color:var(--gym-orange)">@driver.Average</span>
+                            <span class="text-muted small">(@driver.Count review@(driver.Count != 1 ? "s" : ""))</span>
+                        </div>
+
+                        @* Latest reviews snippet *@
+                        @if (driver.Latest.Any())
+                        {
+                            <div class="mb-3 d-flex flex-column gap-2">
+                                @foreach (var r in driver.Latest)
+                                {
+                                    <div class="p-2 rounded" style="background:rgba(255,255,255,.03);border-left:2px solid rgba(249,115,22,.4)">
+                                        <div class="d-flex gap-1 mb-1">
+                                            @for (int s = 1; s <= 5; s++)
+                                            { <i class="bi bi-star@(s <= r.Stars ? "-fill" : "")" style="color:#f59e0b;font-size:.7rem"></i> }
+                                        </div>
+                                        <p class="text-muted small mb-1 fst-italic">"@r.Comment"</p>
+                                        <span class="text-muted" style="font-size:.72rem">— @r.ReviewerName</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <div class="mt-auto">
+                            <button class="btn btn-gym btn-sm w-100" data-bs-toggle="collapse"
+                                    data-bs-target="#rateForm@(driver.Id)">
+                                <i class="bi bi-star-fill me-1"></i>Rate This Driver
+                            </button>
+                            <div class="collapse mt-3" id="rateForm@(driver.Id)">
+                                <form asp-action="RateDriver" method="post" data-loading-msg="Submitting rating…">
+                                    <input type="hidden" name="driverId" value="@driver.Id" />
+                                    <div class="mb-2">
+                                        <label class="form-label text-muted small">Your Name (optional)</label>
+                                        <input name="reviewerName" class="form-control gym-input form-control-sm" placeholder="e.g. Nomsa M." />
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label text-muted small">Stars *</label>
+                                        <div class="d-flex gap-2">
+                                            @for (int s = 1; s <= 5; s++)
+                                            {
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="stars" value="@s" id="s@(driver.Id)_@s" required />
+                                                    <label class="form-check-label" for="s@(driver.Id)_@s" style="color:#f59e0b">@s★</label>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label text-muted small">Comment (optional)</label>
+                                        <textarea name="comment" class="form-control gym-input form-control-sm" rows="2" placeholder="Share your experience..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-gym btn-sm w-100">Submit Rating</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="text-center mt-5">
+        <a asp-controller="Rating" asp-action="Academy" class="btn btn-gym-dark">
+            <i class="bi bi-star-fill me-2"></i>Rate the Academy itself
+        </a>
+    </div>
+</div>

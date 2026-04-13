@@ -1,0 +1,159 @@
+@using CarvedRockFitness.Web.Services
+@{
+    ViewData["Title"] = "YVEDA Academy Reviews";
+    var result  = ViewBag.Reviews as AcademyReviewsResultDto;
+    var reviews = result?.Reviews ?? new List<AcademyReviewItemDto>();
+    var avg     = result?.Average ?? 0.0;
+    var count   = result?.Count   ?? 0;
+    var roles   = new[] { "Parent", "Player", "Coach", "Spectator", "Community Member" };
+}
+
+@if (TempData["ReviewSuccess"] != null)
+{
+    <div class="container pt-4">
+        <div class="alert alert-success d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill fs-5"></i><span>@TempData["ReviewSuccess"]</span>
+        </div>
+    </div>
+}
+@if (TempData["ReviewError"] != null)
+{
+    <div class="container pt-4">
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i><span>@TempData["ReviewError"]</span>
+        </div>
+    </div>
+}
+
+<section class="gym-hero py-5">
+    <div class="container text-center">
+        <span class="gym-badge gym-badge-football mb-3 d-inline-flex">
+            <i class="bi bi-star-fill me-1"></i>ACADEMY REVIEWS
+        </span>
+        <h1 class="fw-black mb-3" style="font-size:clamp(1.8rem,5vw,2.8rem)">
+            What <span style="color:var(--gym-orange)">Families Say</span>
+        </h1>
+        @if (count > 0)
+        {
+            <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+                <div class="d-flex gap-1">
+                    @{ int fullS = (int)Math.Floor(avg); bool hasH = avg - fullS >= 0.5; }
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= fullS) { <i class="bi bi-star-fill" style="color:#f59e0b;font-size:1.3rem"></i> }
+                        else if (i == fullS + 1 && hasH) { <i class="bi bi-star-half" style="color:#f59e0b;font-size:1.3rem"></i> }
+                        else { <i class="bi bi-star" style="color:#f59e0b;font-size:1.3rem"></i> }
+                    }
+                </div>
+                <span class="fw-black" style="font-size:1.6rem;color:var(--gym-orange)">@avg</span>
+                <span class="text-muted">/ 5 · @count review@(count != 1 ? "s" : "")</span>
+            </div>
+        }
+        <p class="text-muted mx-auto mb-0" style="max-width:520px">
+            Real feedback from parents, players, and coaches who are part of YVEDA.
+        </p>
+    </div>
+</section>
+
+<div class="container pb-5 mt-5">
+    <div class="row g-5">
+
+        @* Reviews list *@
+        <div class="col-lg-7">
+            <div class="gym-section-head mb-4">
+                <div class="gym-section-dot"></div>
+                <h4>Community Reviews</h4>
+            </div>
+
+            @if (!reviews.Any())
+            {
+                <div class="gym-detail-card text-center py-5">
+                    <i class="bi bi-chat-quote" style="font-size:2rem;color:var(--gym-orange)"></i>
+                    <p class="text-muted mt-3 mb-0">No reviews yet — be the first to share your experience!</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var r in reviews)
+                    {
+                        <div class="gym-detail-card">
+                            <div class="d-flex align-items-start gap-3">
+                                <div style="width:40px;height:40px;border-radius:50%;background:rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--gym-orange)">
+                                    @r.ReviewerName[0]
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                        <span class="fw-bold" style="color:var(--text-1)">@r.ReviewerName</span>
+                                        @if (!string.IsNullOrEmpty(r.ReviewerRole))
+                                        {
+                                            <span class="badge" style="background:rgba(249,115,22,.15);color:var(--gym-orange);font-size:.72rem">@r.ReviewerRole</span>
+                                        }
+                                        <div class="d-flex gap-1 ms-auto">
+                                            @for (int s = 1; s <= 5; s++)
+                                            { <i class="bi bi-star@(s <= r.Stars ? "-fill" : "")" style="color:#f59e0b;font-size:.85rem"></i> }
+                                        </div>
+                                    </div>
+                                    <p class="text-muted mb-1" style="font-size:.92rem">"@r.Comment"</p>
+                                    <span class="text-muted" style="font-size:.75rem">@r.CreatedAt.ToString("MMM yyyy")</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        @* Review form *@
+        <div class="col-lg-5">
+            <div class="gym-section-head mb-4">
+                <div class="gym-section-dot"></div>
+                <h4>Leave a Review</h4>
+            </div>
+            <div class="gym-detail-card">
+                <form asp-action="ReviewAcademy" method="post" data-loading-msg="Submitting review…">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Your Name (optional)</label>
+                        <input name="reviewerName" class="form-control gym-input" placeholder="e.g. Nomsa M." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Your Role</label>
+                        <select name="reviewerRole" class="form-select gym-input">
+                            <option value="">-- Select --</option>
+                            @foreach (var role in roles)
+                            { <option value="@role">@role</option> }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Star Rating *</label>
+                        <div class="d-flex gap-3">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="stars" value="@s" id="as@s" required />
+                                    <label class="form-check-label" for="as@s" style="color:#f59e0b;font-size:1.1rem">@s★</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Your Review *</label>
+                        <textarea name="comment" class="form-control gym-input" rows="4"
+                                  placeholder="Tell us about your experience with YVEDA Academy..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-gym w-100">
+                        <i class="bi bi-send-fill me-2"></i>Submit Review
+                    </button>
+                    <p class="text-muted small text-center mt-2 mb-0">Reviews appear after moderation (usually within 24h).</p>
+                </form>
+            </div>
+
+            <div class="text-center mt-4">
+                <a asp-controller="Rating" asp-action="Drivers" class="btn btn-gym-dark w-100">
+                    <i class="bi bi-bus-front-fill me-2"></i>Rate Your Child's Driver Instead
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>

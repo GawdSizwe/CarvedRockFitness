@@ -13,14 +13,29 @@
     <style>body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }</style>
     @await RenderSectionAsync("Head", required: false)
 </head>
-<body class="gym-body">
+<body class="gym-body"
+      data-toast-success="@TempData["Success"]"
+      data-toast-error="@TempData["Error"]">
+
+    <!-- Top progress bar -->
+    <div id="gym-progress"></div>
+
+    <!-- Full-page loader -->
+    <div id="gym-page-loader" role="status" aria-live="polite">
+        <div class="gym-spinner"></div>
+        <p id="gym-loader-msg">Loading…</p>
+    </div>
+
+    <!-- Toast container -->
+    <div id="gym-toast-container" aria-live="polite"></div>
 
     <nav class="navbar navbar-expand-lg gym-navbar sticky-top">
         <div class="container">
             <a class="navbar-brand gym-brand" asp-controller="Home" asp-action="Index">
                 SPORT<span class="text-orange">&amp;HEALTH</span>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#gymNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#gymNav"
+                    aria-controls="gymNav" aria-expanded="false" aria-label="Toggle navigation">
                 <i class="bi bi-list text-white fs-4"></i>
             </button>
             <div class="collapse navbar-collapse" id="gymNav">
@@ -155,6 +170,12 @@
         <a asp-controller="Academy" asp-action="Index">
             <i class="bi bi-shield-fill-check"></i>Academy
         </a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Admin" asp-action="Index">
+                <i class="bi bi-shield-fill"></i>Admin
+            </a>
+        }
         @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("PaidUser") || User.IsInRole("Admin")))
         {
             <a asp-controller="Suggestion" asp-action="Create" class="gym-bottom-post">
@@ -188,6 +209,130 @@
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function () {
+        /* ── Progress bar ── */
+        var bar = document.getElementById('gym-progress');
+        var barTimer, barVal = 0;
+        function progressStart() {
+            bar.style.opacity = '1';
+            bar.classList.remove('gym-progress-done');
+            barVal = 0;
+            bar.style.width = '0%';
+            barTimer = setInterval(function () {
+                if (barVal < 85) { barVal += (85 - barVal) * 0.08 + 0.5; bar.style.width = barVal + '%'; }
+            }, 80);
+        }
+        function progressDone() {
+            clearInterval(barTimer);
+            bar.style.width = '100%';
+            setTimeout(function () { bar.classList.add('gym-progress-done'); }, 300);
+        }
+
+        /* ── Page loader ── */
+        var loader = document.getElementById('gym-page-loader');
+        var loaderMsg = document.getElementById('gym-loader-msg');
+        function showLoader(msg) {
+            loaderMsg.textContent = msg || 'Loading…';
+            loader.classList.add('active');
+            progressStart();
+        }
+        function hideLoader() {
+            loader.classList.remove('active');
+            progressDone();
+        }
+
+        /* ── Toast ── */
+        var toastBox = document.getElementById('gym-toast-container');
+        function showToast(msg, type) {
+            var icons = { success: 'bi-check-circle-fill', error: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' };
+            var colors = { success: '#22c55e', error: '#ef4444', info: 'var(--gym-orange)' };
+            var t = document.createElement('div');
+            t.className = 'gym-toast ' + (type || 'info');
+            t.innerHTML = '<i class="bi ' + (icons[type] || icons.info) + '" style="color:' + (colors[type] || colors.info) + ';font-size:1.1rem"></i><span>' + msg + '</span>';
+            toastBox.appendChild(t);
+            setTimeout(function () { t.classList.add('hiding'); setTimeout(function () { t.remove(); }, 300); }, 3500);
+        }
+        window.gymToast = showToast;
+
+        /* ── Nav links: progress bar on click ── */
+        document.querySelectorAll('a:not([data-no-loader]):not([href^="#"]):not([href^="mailto"]):not([href^="tel"]):not([target="_blank"])').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                var href = this.getAttribute('href');
+                if (!href || href === '#' || href === window.location.href || href === window.location.pathname) return;
+                if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+                // Don't trigger loader for Bootstrap dropdown toggles
+                if (this.getAttribute('data-bs-toggle') === 'dropdown') return;
+                progressStart();
+            });
+        });
+
+        /* ── Forms: spinner on submit ── */
+        document.querySelectorAll('form:not([data-no-loader])').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (!form.checkValidity()) return;
+                var btn = form.querySelector('[type="submit"]');
+                if (btn) {
+                    var original = btn.innerHTML;
+                    btn.dataset.original = original;
+                    btn.innerHTML = '<span class="btn-text">' + original + '</span>';
+                    btn.classList.add('btn-gym-loading');
+                }
+                var msg = form.dataset.loadingMsg || 'Saving…';
+                showLoader(msg);
+            });
+        });
+
+        /* ── Hide loader on page show (back/forward cache) ── */
+        window.addEventListener('pageshow', function (e) {
+            hideLoader();
+            document.querySelectorAll('.btn-gym-loading').forEach(function (b) {
+                b.classList.remove('btn-gym-loading');
+                if (b.dataset.original) b.innerHTML = b.dataset.original;
+            });
+        });
+
+        /* ── Show TempData toasts ── */
+        var successMsg = document.body.dataset.toastSuccess;
+        var errorMsg   = document.body.dataset.toastError;
+        if (successMsg) { setTimeout(function() { showToast(successMsg, 'success'); }, 300); }
+        if (errorMsg)   { setTimeout(function() { showToast(errorMsg,   'error');   }, 300); }
+
+        /* ── Hamburger toggler ── */
+        var toggler = document.querySelector('.navbar-toggler');
+        var navCollapse = document.querySelector('#gymNav');
+        if (toggler && navCollapse) {
+            toggler.addEventListener('click', function () {
+                var expanded = this.getAttribute('aria-expanded') === 'true';
+                this.setAttribute('aria-expanded', String(!expanded));
+                navCollapse.classList.toggle('show');
+            });
+            // Only close the collapse when a real navigation link is clicked,
+            // NOT dropdown toggles (they need the collapse to stay open)
+            navCollapse.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    if (this.getAttribute('data-bs-toggle') === 'dropdown') return;
+                    // Also don't close if this link is inside an open dropdown menu
+                    if (this.closest('.dropdown-menu')) return;
+                    navCollapse.classList.remove('show');
+                    toggler.setAttribute('aria-expanded', 'false');
+                });
+            });
+        }
+
+        /* ── Active bottom nav ── */
+        var path = window.location.pathname.toLowerCase();
+        document.querySelectorAll('.gym-bottom-nav a').forEach(function (a) {
+            var href = (a.getAttribute('href') || '').toLowerCase();
+            if (href && href !== '/' && path.startsWith(href)) a.classList.add('active');
+            else if (href === '/' && (path === '/' || path === '')) a.classList.add('active');
+        });
+
+        /* ── Progress done when page finishes loading ── */
+        if (document.readyState === 'complete') { progressDone(); }
+        else { progressStart(); window.addEventListener('load', progressDone); }
+    })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

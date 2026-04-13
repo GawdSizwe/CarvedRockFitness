@@ -5,19 +5,29 @@ using Microsoft.AspNetCore.Mvc;
 namespace CarvedRockFitness.Web.Controllers;
 
 [Authorize(Roles = "Admin")]
-public class AdminController(ApiService apiService, IConfiguration config, IWebHostEnvironment env) : Controller
+public class AdminController(ApiService apiService) : Controller
 {
     public async Task<IActionResult> Index()
     {
         var usersTask       = apiService.GetUsersAsync();
         var suggestionsTask = apiService.GetSuggestionsAsync();
         var bannersTask     = apiService.GetAllBannersAsync();
-        await Task.WhenAll(usersTask, suggestionsTask, bannersTask);
+        var academyTask     = apiService.GetAcademyRegistrationsAsync();
+        var driversTask     = apiService.GetAllDriversAdminAsync();
+        var driverAppsTask  = apiService.GetDriverApplicationsAsync();
+        var reviewsTask     = apiService.GetAllAcademyReviewsAdminAsync();
+        var driverRatingsTask = apiService.GetAllDriverRatingsAsync();
+        await Task.WhenAll(usersTask, suggestionsTask, bannersTask, academyTask, driversTask, driverAppsTask, reviewsTask, driverRatingsTask);
 
-        ViewBag.Users       = usersTask.Result;
-        ViewBag.Suggestions = suggestionsTask.Result;
-        ViewBag.Banners     = bannersTask.Result;
-        ViewBag.DemoVisible = config.GetValue("SeedData:DemoSuggestionsVisible", true);
+        ViewBag.Users           = usersTask.Result;
+        ViewBag.Suggestions     = suggestionsTask.Result;
+        ViewBag.Banners         = bannersTask.Result;
+        ViewBag.Academy         = academyTask.Result;
+        ViewBag.Drivers         = driversTask.Result;
+        ViewBag.DriverApps      = driverAppsTask.Result;
+        ViewBag.AcademyReviews  = reviewsTask.Result;
+        ViewBag.DriverRatings   = driverRatingsTask.Result;
+        ViewBag.DemoVisible     = await apiService.GetDemoVisibleAsync();
         return View();
     }
 
@@ -50,23 +60,9 @@ public class AdminController(ApiService apiService, IConfiguration config, IWebH
     }
 
     [HttpPost]
-    public IActionResult ToggleDemoData()
+    public async Task<IActionResult> ToggleDemoData()
     {
-        var appsettingsPath = Path.Combine(env.ContentRootPath, "..", "CarvedRockFitness.API", "appsettings.json");
-        appsettingsPath = Path.GetFullPath(appsettingsPath);
-
-        var current = config.GetValue("SeedData:DemoSuggestionsVisible", true);
-        var newValue = !current;
-
-        if (System.IO.File.Exists(appsettingsPath))
-        {
-            var json = System.IO.File.ReadAllText(appsettingsPath);
-            var updated = System.Text.RegularExpressions.Regex.Replace(
-                json,
-                "\"DemoSuggestionsVisible\"\\s*:\\s*(true|false)",
-                $"\"DemoSuggestionsVisible\": {newValue.ToString().ToLower()}");
-            System.IO.File.WriteAllText(appsettingsPath, updated);
-        }
+        var newValue = await apiService.ToggleDemoDataAsync();
 
         TempData["Success"] = newValue
             ? "Demo listings are now VISIBLE in the feed."
@@ -75,7 +71,7 @@ public class AdminController(ApiService apiService, IConfiguration config, IWebH
     }
 
     [HttpPost]
-    public async Task<IActionResult> BanUser(int id)
+    public async Task<IActionResult> BanUser(string id)
     {
         await apiService.BanUserAsync(id);
         TempData["Success"] = "User ban status updated.";
@@ -83,10 +79,18 @@ public class AdminController(ApiService apiService, IConfiguration config, IWebH
     }
 
     [HttpPost]
-    public async Task<IActionResult> DeleteUser(int id)
+    public async Task<IActionResult> DeleteUser(string id)
     {
         await apiService.DeleteIdentityUserAsync(id);
         TempData["Success"] = "User deleted.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateAcademyStatus(int id, string status, string? assignedRoute)
+    {
+        await apiService.UpdateAcademyStatusAsync(id, status, assignedRoute);
+        TempData["Success"] = "Registration status updated.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -109,6 +113,64 @@ public class AdminController(ApiService apiService, IConfiguration config, IWebH
     public async Task<IActionResult> DeleteBanner(int id)
     {
         await apiService.DeleteBannerAsync(id);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ApproveDriverApplication(int id)
+    {
+        await apiService.ApproveDriverApplicationAsync(id);
+        TempData["Success"] = "Application approved — driver added to active roster.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RejectDriverApplication(int id)
+    {
+        await apiService.RejectDriverApplicationAsync(id);
+        TempData["Success"] = "Application rejected.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateDriverStatus(int id, string status)
+    {
+        await apiService.UpdateDriverStatusAsync(id, status);
+        TempData["Success"] = "Driver status updated.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ApproveReview(int id)
+    {
+        await apiService.ApproveAcademyReviewAsync(id);
+        TempData["Success"] = "Review approved and is now public.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteReview(int id)
+    {
+        await apiService.DeleteAcademyReviewAsync(id);
+        TempData["Success"] = "Review deleted.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteDriverRating(int id)
+    {
+        await apiService.DeleteDriverRatingAsync(id);
+        TempData["Success"] = "Rating removed.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateDriver(string fullName, string phone, string route,
+        string? vehicle, int capacity, bool policeClearance, string? licenseNumber)
+    {
+        var dto = new CreateDriverRequest(fullName, phone, route, vehicle, capacity, policeClearance, licenseNumber);
+        await apiService.CreateDriverAsync(dto);
+        TempData["Success"] = $"Driver {fullName} added to {route} route.";
         return RedirectToAction(nameof(Index));
     }
 }

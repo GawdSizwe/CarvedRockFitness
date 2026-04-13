@@ -1,5 +1,6 @@
 using CarvedRockFitness.API.DbContexts;
 using CarvedRockFitness.API.Entities;
+using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -15,7 +16,7 @@ namespace CarvedRockFitness.API.Controllers;
 public class SuggestionsController(
     CarvedRockFitnessDbContext db,
     IDistributedCache cache,
-    IConfiguration config,
+    RuntimeSettingsService settings,
     ILogger<SuggestionsController> logger) : ControllerBase
 {
     private const string CacheKeyPrefix = "suggestions_page_";
@@ -38,7 +39,7 @@ public class SuggestionsController(
 
         logger.LogDebug("Cache miss for {CacheKey}, querying database", cacheKey);
 
-        var showDemo = config.GetValue("SeedData:DemoSuggestionsVisible", true);
+        var showDemo = settings.DemoSuggestionsVisible;
 
         var suggestions = await db.Suggestions
             .Include(s => s.ContactDetail)
@@ -79,6 +80,17 @@ public class SuggestionsController(
         }, ct);
 
         return Content(json, "application/json");
+    }
+
+    [HttpGet("count")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCount(CancellationToken ct = default)
+    {
+        var showDemo = settings.DemoSuggestionsVisible;
+        var count = await db.Suggestions
+            .Where(s => !s.IsHidden && (showDemo || !s.IsDemoData))
+            .CountAsync(ct);
+        return Ok(new { count });
     }
 
     [HttpGet("{id:int}")]

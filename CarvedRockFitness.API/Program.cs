@@ -2,6 +2,7 @@ using CarvedRockFitness.API.Authorization;
 using CarvedRockFitness.API.DbContexts;
 using CarvedRockFitness.API.Extensions;
 using CarvedRockFitness.API.Middleware;
+using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,12 @@ try
 
     // API controllers only
     builder.Services.AddControllers();
+
+    // Runtime-togglable settings (seeded from appsettings, toggled via /admin/settings)
+    builder.Services.AddSingleton(new RuntimeSettingsService
+    {
+        DemoSuggestionsVisible = builder.Configuration.GetValue("SeedData:DemoSuggestionsVisible", false)
+    });
 
     var pgConn = Environment.GetEnvironmentVariable("DATABASE_URL");
     builder.Services.AddDbContext<CarvedRockFitnessDbContext>(
@@ -142,9 +149,182 @@ try
             options.Authority = builder.Configuration["Auth:Authority"]; // e.g. https://localhost:5002
             options.Audience = "gym-api";
             options.MapInboundClaims = false;
+            options.RequireHttpsMetadata = false; // Fly.io proxy handles HTTPS
+            options.TokenValidationParameters.RoleClaimType = "role";
+            options.TokenValidationParameters.NameClaimType = "name";
+            options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+            {
+                OnAuthenticationFailed = ctx =>
+                {
+                    Log.Error("JWT validation failed: {Error}", ctx.Exception.Message);
+                    return Task.CompletedTask;
+                },
+                OnChallenge = ctx =>
+                {
+                    Log.Warning("JWT challenge: {Error} — {ErrorDescription}", ctx.Error, ctx.ErrorDescription);
+                    return Task.CompletedTask;
+                }
+            };
         });
 
     var app = builder.Build();
+
+    // Auto-apply schema changes on startup (PostgreSQL)
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<CarvedRockFitnessDbContext>();
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS "AcademyRegistrations" (
+                "Id"             SERIAL PRIMARY KEY,
+                "PlayerName"     TEXT NOT NULL,
+                "Age"            INTEGER NOT NULL DEFAULT 0,
+                "Sport"          TEXT NOT NULL,
+                "ParentName"     TEXT NOT NULL,
+                "ParentEmail"    TEXT NOT NULL,
+                "ParentPhone"    TEXT NOT NULL,
+                "NeedsTransport" BOOLEAN NOT NULL DEFAULT FALSE,
+                "PickupAddress"  TEXT,
+                "Notes"          TEXT,
+                "Status"         TEXT NOT NULL DEFAULT 'Pending',
+                "AssignedRoute"  TEXT,
+                "IsDemoData"     BOOLEAN NOT NULL DEFAULT FALSE,
+                "CreatedAt"      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            );
+            """);
+
+        // Seed academy demo data if table is empty
+        var count = db.AcademyRegistrations.Count();
+        if (count == 0)
+        {
+            db.Database.ExecuteSqlRaw("""
+                INSERT INTO "AcademyRegistrations" ("PlayerName","Age","Sport","ParentName","ParentEmail","ParentPhone","NeedsTransport","PickupAddress","Status","AssignedRoute","IsDemoData","CreatedAt") VALUES
+                ('Sipho Dlamini',12,'Football','Nomsa Dlamini','nomsa@email.com','083 111 2001',TRUE,'Tembisa CBD','Active','Tembisa CBD',TRUE,'2025-02-01'),
+                ('Thabo Mokoena',14,'Football','Grace Mokoena','grace@email.com','072 222 3002',TRUE,'Ivory Park','Active','Ivory Park',TRUE,'2025-02-03'),
+                ('Lerato Khumalo',10,'Cricket','Peter Khumalo','peter@email.com','061 333 4003',FALSE,NULL,'Active',NULL,TRUE,'2025-02-05'),
+                ('Naledi Sithole',11,'Athletics','Maria Sithole','maria@email.com','082 444 5004',TRUE,'Kwa-Thema','Active','Kwa-Thema',TRUE,'2025-02-08'),
+                ('Kabelo Mthembu',16,'Football','James Mthembu','james@email.com','073 555 6005',TRUE,'Rabie Ridge','Active','Rabie Ridge',TRUE,'2025-02-10'),
+                ('Zanele Nkosi',9,'Tennis','Ruth Nkosi','ruth@email.com','084 666 7006',FALSE,NULL,'Active',NULL,TRUE,'2025-02-12'),
+                ('Bongani Zulu',13,'Football','David Zulu','david@email.com','065 777 8007',TRUE,'Ebony Park','Active','Ebony Park',TRUE,'2025-02-15'),
+                ('Mpho Mahlangu',15,'Cricket','Sarah Mahlangu','sarah@email.com','071 888 9008',TRUE,'Clayville','Confirmed','Clayville',TRUE,'2025-03-01'),
+                ('Ayanda Ndlovu',8,'Athletics','Linda Ndlovu','linda@email.com','062 999 1009',FALSE,NULL,'Pending',NULL,TRUE,'2025-03-05'),
+                ('Tshepo Molefe',17,'Football','Anna Molefe','anna@email.com','083 101 2010',TRUE,'Tembisa CBD','Active','Tembisa CBD',TRUE,'2025-03-08'),
+                ('Palesa Maseko',11,'Tennis','Joseph Maseko','joseph@email.com','074 202 3011',FALSE,NULL,'Active',NULL,TRUE,'2025-03-10'),
+                ('Siyabonga Cele',14,'Cricket','Thandi Cele','thandi@email.com','081 303 4012',TRUE,'Ivory Park','Active','Ivory Park',TRUE,'2025-03-12');
+                """);
+        }
+
+        // Drivers table
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS "Drivers" (
+                "Id"              SERIAL PRIMARY KEY,
+                "FullName"        TEXT NOT NULL,
+                "Phone"           TEXT NOT NULL,
+                "Route"           TEXT NOT NULL,
+                "Vehicle"         TEXT,
+                "Capacity"        INTEGER NOT NULL DEFAULT 7,
+                "PoliceClearance" BOOLEAN NOT NULL DEFAULT FALSE,
+                "LicenseNumber"   TEXT,
+                "Status"          TEXT NOT NULL DEFAULT 'Active',
+                "IsDemoData"      BOOLEAN NOT NULL DEFAULT FALSE,
+                "CreatedAt"       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            );
+            """);
+
+        // DriverApplications table
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS "DriverApplications" (
+                "Id"                 SERIAL PRIMARY KEY,
+                "FullName"           TEXT NOT NULL,
+                "Phone"              TEXT NOT NULL,
+                "Email"              TEXT NOT NULL,
+                "PreferredRoute"     TEXT NOT NULL,
+                "Vehicle"            TEXT,
+                "Capacity"           INTEGER NOT NULL DEFAULT 7,
+                "HasPoliceClearance" BOOLEAN NOT NULL DEFAULT FALSE,
+                "LicenseNumber"      TEXT,
+                "Notes"              TEXT,
+                "Status"             TEXT NOT NULL DEFAULT 'Pending',
+                "CreatedAt"          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            );
+            """);
+
+        // Seed demo drivers if empty
+        if (!db.Drivers.Any())
+        {
+            db.Database.ExecuteSqlRaw("""
+                INSERT INTO "Drivers" ("FullName","Phone","Route","Vehicle","Capacity","PoliceClearance","LicenseNumber","Status","IsDemoData","CreatedAt") VALUES
+                ('Siphamandla Ndlovu','082 301 4421','Tembisa CBD','Toyota Quantum (White)',12,TRUE,'GP 23 XY 7654','Active',TRUE,'2025-01-10'),
+                ('Bonginkosi Mthembu','073 812 5503','Ivory Park','Toyota HiAce (Silver)',14,TRUE,'GP 45 AB 1122','Active',TRUE,'2025-01-15'),
+                ('Themba Radebe','061 904 3312','Kwa-Thema','Nissan NV350 (Blue)',10,TRUE,'GP 67 CD 3344','Active',TRUE,'2025-01-20'),
+                ('Nkosinathi Dlamini','083 456 7788','Rabie Ridge','Toyota Quantum (Black)',12,FALSE,'GP 89 EF 5566','Active',TRUE,'2025-02-01'),
+                ('Mthokozisi Cele','074 223 9901','Ebony Park','Toyota HiAce (White)',14,TRUE,'GP 12 GH 7788','Active',TRUE,'2025-02-05'),
+                ('Lungelo Khumalo','082 774 1123','Clayville','Ford Transit (Grey)',9,TRUE,'GP 34 IJ 9900','Active',TRUE,'2025-02-10');
+                """);
+        }
+
+        // DriverRatings table
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS "DriverRatings" (
+                "Id"           SERIAL PRIMARY KEY,
+                "DriverId"     INTEGER NOT NULL,
+                "ReviewerName" TEXT NOT NULL DEFAULT 'Anonymous',
+                "Stars"        INTEGER NOT NULL DEFAULT 5,
+                "Comment"      TEXT,
+                "IsDemoData"   BOOLEAN NOT NULL DEFAULT FALSE,
+                "CreatedAt"    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            );
+            """);
+
+        // AcademyReviews table
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS "AcademyReviews" (
+                "Id"           SERIAL PRIMARY KEY,
+                "ReviewerName" TEXT NOT NULL DEFAULT 'Anonymous',
+                "ReviewerRole" TEXT,
+                "Stars"        INTEGER NOT NULL DEFAULT 5,
+                "Comment"      TEXT NOT NULL DEFAULT '',
+                "Approved"     BOOLEAN NOT NULL DEFAULT FALSE,
+                "IsDemoData"   BOOLEAN NOT NULL DEFAULT FALSE,
+                "CreatedAt"    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            );
+            """);
+
+        // Seed demo driver ratings (referencing driver IDs 1–6)
+        if (!db.DriverRatings.Any())
+        {
+            db.Database.ExecuteSqlRaw("""
+                INSERT INTO "DriverRatings" ("DriverId","ReviewerName","Stars","Comment","IsDemoData","CreatedAt") VALUES
+                (1,'Nomsa Dlamini',5,'Siphamandla is always on time and very professional. Our kids feel safe.',TRUE,'2025-03-01'),
+                (1,'Grace Mokoena',5,'Excellent driver — communicates well on WhatsApp. Highly recommend.',TRUE,'2025-03-05'),
+                (1,'Maria Sithole',4,'Very reliable, only missed once due to a flat tyre.',TRUE,'2025-03-10'),
+                (2,'Peter Khumalo',5,'Bonginkosi is fantastic with the kids. Always smiling.',TRUE,'2025-03-02'),
+                (2,'Ruth Nkosi',4,'Good driver, vehicle is always clean.',TRUE,'2025-03-08'),
+                (3,'James Mthembu',5,'Themba is punctual and the kids love him.',TRUE,'2025-03-03'),
+                (3,'David Zulu',5,'Best driver on the route. Never late.',TRUE,'2025-03-09'),
+                (4,'Sarah Mahlangu',3,'Nkosinathi is okay but sometimes texts while driving.',TRUE,'2025-03-04'),
+                (4,'Linda Ndlovu',4,'Generally good but communication could be better.',TRUE,'2025-03-11'),
+                (5,'Anna Molefe',5,'Mthokozisi is wonderful. My son looks forward to the ride!',TRUE,'2025-03-06'),
+                (5,'Joseph Maseko',5,'Always early, very safe driver.',TRUE,'2025-03-12'),
+                (6,'Thandi Cele',5,'Lungelo goes above and beyond for the children.',TRUE,'2025-03-07');
+                """);
+        }
+
+        // Seed demo academy reviews
+        if (!db.AcademyReviews.Any())
+        {
+            db.Database.ExecuteSqlRaw("""
+                INSERT INTO "AcademyReviews" ("ReviewerName","ReviewerRole","Stars","Comment","Approved","IsDemoData","CreatedAt") VALUES
+                ('Nomsa Dlamini','Parent',5,'YVEDA Academy has completely transformed my son. The coaches are incredible and the transport service gives me peace of mind.',TRUE,TRUE,'2025-03-01'),
+                ('Coach Baloyi','Coach',5,'World-class facilities and a genuine commitment to youth development. Proud to be part of this.',TRUE,TRUE,'2025-03-05'),
+                ('Grace Mokoena','Parent',5,'My daughter went from shy to a confident athlete in 3 months. Cannot thank YVEDA enough.',TRUE,TRUE,'2025-03-08'),
+                ('Sipho Radebe','Player',5,'The best academy in Tembisa! The coaches push us hard but always believe in us.',TRUE,TRUE,'2025-03-10'),
+                ('Peter Khumalo','Parent',4,'Great programme overall. Would love to see more cricket equipment.',TRUE,TRUE,'2025-03-12'),
+                ('Maria Sithole','Parent',5,'Safe transport, professional coaches, great kids programme. 10/10.',TRUE,TRUE,'2025-03-15'),
+                ('Thabo Nkosi','Player',5,'YVEDA changed my life. I got scouted because of this academy!',TRUE,TRUE,'2025-03-18'),
+                ('Linda Cele','Parent',4,'Very happy with the progress my child has made. Transport is reliable.',TRUE,TRUE,'2025-03-20');
+                """);
+        }
+    }
 
     // Configure the HTTP request pipeline
 
@@ -159,7 +339,6 @@ try
         options.RoutePrefix = string.Empty;
     });
 
-    app.UseHttpsRedirection();
     app.UseCors("WebPolicy");
 
     // Request logging

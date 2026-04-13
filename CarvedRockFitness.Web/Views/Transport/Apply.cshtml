@@ -1,0 +1,164 @@
+@model CarvedRockFitness.Web.Controllers.DriverApplyForm
+@{
+    ViewData["Title"] = "Drive for YVEDA Academy";
+    var routes = new[] { "Tembisa CBD", "Ivory Park", "Kwa-Thema", "Rabie Ridge", "Ebony Park", "Clayville" };
+}
+
+@if (TempData["ApplySuccess"] != null)
+{
+    <div class="container pt-4">
+        <div class="alert alert-success d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            <span>@TempData["ApplySuccess"]</span>
+        </div>
+    </div>
+}
+@if (TempData["ApplyError"] != null)
+{
+    <div class="container pt-4">
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <span>@TempData["ApplyError"]</span>
+        </div>
+    </div>
+}
+
+<section class="gym-hero py-5">
+    <div class="container text-center">
+        <span class="gym-badge gym-badge-transport mb-3 d-inline-flex">
+            <i class="bi bi-bus-front-fill me-1"></i>DRIVER APPLICATIONS
+        </span>
+        <h1 class="fw-black mb-3" style="font-size:clamp(1.8rem,5vw,2.8rem)">
+            Drive for <span style="color:var(--gym-orange)">YVEDA Academy</span>
+        </h1>
+        <p class="text-muted mx-auto mb-0" style="max-width:540px">
+            Earn while making a difference. Verified drivers transport township kids to and from
+            YVEDA Academy safely every session day.
+        </p>
+    </div>
+</section>
+
+<div class="container pb-5 mt-5">
+    <div class="row g-5">
+
+        @* Left — what we offer *@
+        <div class="col-lg-4">
+            <div class="gym-detail-card h-100">
+                <h5 class="fw-bold mb-4" style="color:var(--text-1)"><i class="bi bi-star-fill me-2" style="color:var(--gym-orange)"></i>What You Get</h5>
+                <div class="d-flex flex-column gap-4">
+                    <div class="d-flex gap-3">
+                        <i class="bi bi-cash-coin fs-4" style="color:var(--gym-orange);flex-shrink:0"></i>
+                        <div>
+                            <strong style="color:var(--text-1)">R300/child/month</strong>
+                            <p class="text-muted small mb-0">Paid directly per registered child on your route.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <i class="bi bi-shield-check fs-4" style="color:var(--gym-orange);flex-shrink:0"></i>
+                        <div>
+                            <strong style="color:var(--text-1)">Fixed routes</strong>
+                            <p class="text-muted small mb-0">Consistent, predictable routes — plan your day around them.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <i class="bi bi-people-fill fs-4" style="color:var(--gym-orange);flex-shrink:0"></i>
+                        <div>
+                            <strong style="color:var(--text-1)">Community impact</strong>
+                            <p class="text-muted small mb-0">Help township kids access elite sport development safely.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <i class="bi bi-phone-fill fs-4" style="color:var(--gym-orange);flex-shrink:0"></i>
+                        <div>
+                            <strong style="color:var(--text-1)">WhatsApp coordination</strong>
+                            <p class="text-muted small mb-0">Simple daily updates — no complex systems.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border-color:rgba(255,255,255,.08);" class="my-4" />
+
+                <h6 class="fw-bold mb-3" style="color:var(--text-1)">Requirements</h6>
+                <ul class="list-unstyled text-muted small d-flex flex-column gap-2 mb-0">
+                    <li><i class="bi bi-check-circle-fill me-2" style="color:var(--gym-orange)"></i>Valid PrDP driver's licence</li>
+                    <li><i class="bi bi-check-circle-fill me-2" style="color:var(--gym-orange)"></i>Police clearance certificate</li>
+                    <li><i class="bi bi-check-circle-fill me-2" style="color:var(--gym-orange)"></i>Roadworthy vehicle (min 7-seater)</li>
+                    <li><i class="bi bi-check-circle-fill me-2" style="color:var(--gym-orange)"></i>Valid motor insurance</li>
+                    <li><i class="bi bi-check-circle-fill me-2" style="color:var(--gym-orange)"></i>Background check consent</li>
+                </ul>
+            </div>
+        </div>
+
+        @* Right — application form *@
+        <div class="col-lg-8">
+            <div class="gym-detail-card">
+                <h5 class="fw-bold mb-4" style="color:var(--text-1)"><i class="bi bi-person-badge-fill me-2" style="color:var(--gym-orange)"></i>Driver Application Form</h5>
+
+                <form asp-action="Apply" method="post" data-loading-msg="Submitting application…">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Full Name *</label>
+                            <input asp-for="FullName" class="form-control gym-input" placeholder="Your full name" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Phone Number *</label>
+                            <input asp-for="Phone" class="form-control gym-input" placeholder="082 000 0000" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Email Address *</label>
+                            <input asp-for="Email" type="email" class="form-control gym-input" placeholder="you@email.com" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Preferred Route *</label>
+                            <select asp-for="PreferredRoute" class="form-select gym-input" required>
+                                <option value="">-- Select a route --</option>
+                                @foreach (var route in routes)
+                                {
+                                    <option value="@route">@route</option>
+                                }
+                                <option value="Other">Other (specify in notes)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Vehicle (make, model, colour)</label>
+                            <input asp-for="Vehicle" class="form-control gym-input" placeholder="e.g. Toyota Quantum White" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small">Seating Capacity</label>
+                            <input asp-for="Capacity" type="number" min="5" max="22" class="form-control gym-input" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small">Licence Number</label>
+                            <input asp-for="LicenseNumber" class="form-control gym-input" placeholder="GP 00 XX 0000" />
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input asp-for="HasPoliceClearance" class="form-check-input" type="checkbox" id="clearanceCheck" />
+                                <label class="form-check-label text-muted small" for="clearanceCheck">
+                                    I have a valid <strong style="color:var(--text-1)">Police Clearance Certificate</strong> and consent to a background check
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Additional Notes (optional)</label>
+                            <textarea asp-for="Notes" class="form-control gym-input" rows="3"
+                                      placeholder="Availability, alternative routes, anything else we should know..."></textarea>
+                        </div>
+
+                        <div class="col-12 pt-2">
+                            <button type="submit" class="btn btn-gym btn-lg w-100">
+                                <i class="bi bi-send-fill me-2"></i>Submit Application
+                            </button>
+                            <p class="text-muted small text-center mt-3 mb-0">
+                                We review all applications within 48 hours and will call you to discuss next steps.
+                            </p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>

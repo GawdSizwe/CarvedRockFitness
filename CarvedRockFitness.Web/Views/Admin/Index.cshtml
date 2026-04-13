@@ -3,7 +3,12 @@
     var users       = ViewBag.Users       as List<UserSummaryDto>  ?? new();
     var suggestions = ViewBag.Suggestions as List<SuggestionDto>   ?? new();
     var banners     = ViewBag.Banners     as List<AdBannerDto>     ?? new();
-    var demoVisible = ViewBag.DemoVisible is bool b && b;
+    var academy     = ViewBag.Academy     as List<AcademyRegistrationDto> ?? new();
+    var drivers       = ViewBag.Drivers       as List<DriverDto>              ?? new();
+    var driverApps    = ViewBag.DriverApps    as List<DriverApplicationDto>   ?? new();
+    var acReviews     = ViewBag.AcademyReviews as List<AcademyReviewAdminDto> ?? new();
+    var driverRatings = ViewBag.DriverRatings as DriverRatingsDto;
+    var demoVisible   = ViewBag.DemoVisible is bool b && b;
     var categoryIcons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["HIIT"]      = "gym-badge-hiit",
@@ -362,6 +367,326 @@
                                 </td>
                             </tr>
                         }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    @* ── Academy Registrations ───────────────────────────────── *@
+    <div class="gym-section-head mb-3 mt-5">
+        <div class="gym-section-dot"></div>
+        <h4><i class="bi bi-shield-fill-check me-2" style="color:var(--gym-orange)"></i>YVEDA Academy</h4>
+        <span class="ms-auto text-muted small">@academy.Count total</span>
+    </div>
+
+    <div class="gym-detail-card">
+        @if (!academy.Any())
+        {
+            <p class="text-muted mb-0">No academy registrations yet.</p>
+        }
+        else
+        {
+            @* Stats row *@
+            <div class="d-flex flex-wrap gap-3 mb-3">
+                <span class="badge" style="background:var(--gym-orange);font-size:.8rem">@academy.Count(r => r.Status == "Active") Active</span>
+                <span class="badge" style="background:#eab308;color:#000;font-size:.8rem">@academy.Count(r => r.Status == "Pending") Pending</span>
+                <span class="badge" style="background:#3b82f6;font-size:.8rem">@academy.Count(r => r.Status == "Confirmed") Confirmed</span>
+                <span class="badge" style="background:#64748b;font-size:.8rem">@academy.Count(r => r.NeedsTransport) Need Transport</span>
+            </div>
+
+            @* Group by Sport *@
+            @foreach (var sportGroup in academy.GroupBy(r => r.Sport).OrderBy(g => g.Key))
+            {
+                <h6 class="fw-bold mt-3" style="color:var(--text-1)"><i class="bi bi-dribbble me-1" style="color:var(--gym-orange)"></i>@sportGroup.Key (@sportGroup.Count())</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table gym-table table-sm mb-0">
+                        <thead><tr><th>Player</th><th>Age</th><th>Parent</th><th>Phone</th><th>Transport</th><th>Route</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            @foreach (var r in sportGroup.OrderBy(r => r.PlayerName))
+                            {
+                                <tr>
+                                    <td style="color:var(--text-1);font-weight:600">@r.PlayerName @if(r.IsDemoData){<span class="text-muted" style="font-size:.7rem">(demo)</span>}</td>
+                                    <td>@r.Age</td>
+                                    <td>@r.ParentName<br/><span class="text-muted small">@r.ParentEmail</span></td>
+                                    <td class="small">@r.ParentPhone</td>
+                                    <td>@(r.NeedsTransport ? "Yes" : "No")</td>
+                                    <td class="small">@(r.AssignedRoute ?? r.PickupAddress ?? "—")</td>
+                                    <td>
+                                        @{
+                                            var statusCss = r.Status switch { "Active" => "background:rgba(34,197,94,.15);color:#22c55e", "Pending" => "background:rgba(234,179,8,.15);color:#eab308", "Confirmed" => "background:rgba(59,130,246,.15);color:#3b82f6", _ => "background:rgba(100,116,139,.15);color:#94a3b8" };
+                                        }
+                                        <span class="badge" style="@statusCss;font-size:.75rem">@r.Status</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            @if (r.Status == "Pending")
+                                            {
+                                                <form asp-action="UpdateAcademyStatus" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@r.Id" />
+                                                    <input type="hidden" name="status" value="Confirmed" />
+                                                    <button type="submit" class="btn btn-sm" title="Confirm" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#3b82f6"><i class="bi bi-check-lg"></i></button>
+                                                </form>
+                                            }
+                                            @if (r.Status == "Confirmed")
+                                            {
+                                                <form asp-action="UpdateAcademyStatus" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@r.Id" />
+                                                    <input type="hidden" name="status" value="Active" />
+                                                    <button type="submit" class="btn btn-sm" title="Activate" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e"><i class="bi bi-person-check"></i></button>
+                                                </form>
+                                            }
+                                            @if (r.Status != "Inactive")
+                                            {
+                                                <form asp-action="UpdateAcademyStatus" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@r.Id" />
+                                                    <input type="hidden" name="status" value="Inactive" />
+                                                    <button type="submit" class="btn btn-sm" title="Deactivate" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444"><i class="bi bi-person-x"></i></button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </div>
+
+    @* ── Transport Drivers ─────────────────────────────────── *@
+    <div class="gym-section-head mb-3 mt-5">
+        <div class="gym-section-dot"></div>
+        <h4><i class="bi bi-bus-front-fill me-2" style="color:var(--gym-orange)"></i>Transport Drivers</h4>
+        <span class="ms-auto text-muted small">@drivers.Count total</span>
+    </div>
+
+    <div class="gym-detail-card mb-4">
+        <h6 class="fw-bold mb-3" style="color:var(--text-1)">Add Driver Manually</h6>
+        <form asp-action="CreateDriver" method="post">
+            <div class="row g-2 mb-2">
+                <div class="col-md-3"><input name="fullName" class="form-control gym-input form-control-sm" placeholder="Full Name *" required /></div>
+                <div class="col-md-2"><input name="phone" class="form-control gym-input form-control-sm" placeholder="Phone *" required /></div>
+                <div class="col-md-2">
+                    <select name="route" class="form-select gym-input form-select-sm" required>
+                        <option value="">Route *</option>
+                        @foreach (var r in new[]{"Tembisa CBD","Ivory Park","Kwa-Thema","Rabie Ridge","Ebony Park","Clayville","Other"})
+                        { <option value="@r">@r</option> }
+                    </select>
+                </div>
+                <div class="col-md-2"><input name="vehicle" class="form-control gym-input form-control-sm" placeholder="Vehicle" /></div>
+                <div class="col-md-1"><input name="capacity" type="number" min="5" max="22" value="7" class="form-control gym-input form-control-sm" /></div>
+                <div class="col-md-2"><input name="licenseNumber" class="form-control gym-input form-control-sm" placeholder="Licence No." /></div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="form-check mb-0">
+                    <input type="checkbox" name="policeClearance" value="true" class="form-check-input" id="pcAdmin" />
+                    <label class="form-check-label text-muted small" for="pcAdmin">Police cleared</label>
+                </div>
+                <button type="submit" class="btn btn-gym btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Driver</button>
+            </div>
+        </form>
+
+        <hr style="border-color:rgba(255,255,255,.08)" class="my-3" />
+
+        @if (!drivers.Any())
+        {
+            <p class="text-muted mb-0">No drivers yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table gym-table table-sm mb-0">
+                    <thead><tr><th>Name</th><th>Route</th><th>Phone</th><th>Vehicle</th><th>Seats</th><th>Cleared</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var d in drivers.OrderBy(x => x.Route))
+                    {
+                        <tr>
+                            <td style="color:var(--text-1);font-weight:600">@d.FullName @if(d.IsDemoData){<span class="text-muted" style="font-size:.7rem">(demo)</span>}</td>
+                            <td><i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@d.Route</td>
+                            <td class="small">@d.Phone</td>
+                            <td class="small">@(d.Vehicle ?? "—")</td>
+                            <td>@d.Capacity</td>
+                            <td>@(d.PoliceClearance ? Html.Raw("<span class='badge' style='background:rgba(34,197,94,.15);color:#22c55e;font-size:.7rem'><i class=\"bi bi-shield-check\"></i> Yes</span>") : Html.Raw("<span class='badge' style='background:rgba(239,68,68,.15);color:#ef4444;font-size:.7rem'><i class=\"bi bi-shield-x\"></i> No</span>"))</td>
+                            <td>@{ var dCss = d.Status == "Active" ? "background:rgba(34,197,94,.15);color:#22c55e" : "background:rgba(100,116,139,.15);color:#94a3b8"; }<span class="badge" style="@dCss;font-size:.75rem">@d.Status</span></td>
+                            <td>
+                                <form asp-action="UpdateDriverStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@d.Id" />
+                                    <input type="hidden" name="status" value="@(d.Status == "Active" ? "Inactive" : "Active")" />
+                                    <button type="submit" class="btn btn-sm" style="@(d.Status=="Active"?"background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444":"background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e")" title="@(d.Status=="Active"?"Deactivate":"Activate")">
+                                        <i class="bi bi-@(d.Status=="Active"?"person-x":"person-check")"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    @* ── Driver Applications ────────────────────────────────── *@
+    <div class="gym-section-head mb-3 mt-4">
+        <div class="gym-section-dot"></div>
+        <h4><i class="bi bi-person-badge-fill me-2" style="color:var(--gym-orange)"></i>Driver Applications</h4>
+        @{ var pendingApps = driverApps.Count(a => a.Status == "Pending"); }
+        @if (pendingApps > 0) { <span class="ms-2 badge" style="background:var(--gym-orange)">@pendingApps pending</span> }
+        <span class="ms-auto text-muted small">@driverApps.Count total</span>
+    </div>
+
+    <div class="gym-detail-card">
+        @if (!driverApps.Any())
+        {
+            <p class="text-muted mb-0">No driver applications yet. <a asp-controller="Transport" asp-action="Apply" class="text-orange">Share the apply link</a>.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table gym-table table-sm mb-0">
+                    <thead><tr><th>Name</th><th>Route</th><th>Contact</th><th>Vehicle</th><th>Cleared</th><th>Notes</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    @foreach (var a in driverApps.OrderByDescending(x => x.CreatedAt))
+                    {
+                        <tr>
+                            <td style="color:var(--text-1);font-weight:600">@a.FullName</td>
+                            <td><i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@a.PreferredRoute</td>
+                            <td class="small">@a.Phone<br/><span class="text-muted">@a.Email</span></td>
+                            <td class="small">@(a.Vehicle ?? "—") / @a.Capacity seats</td>
+                            <td>@(a.HasPoliceClearance ? Html.Raw("<span class='badge' style='background:rgba(34,197,94,.15);color:#22c55e;font-size:.7rem'><i class=\"bi bi-shield-check\"></i> Yes</span>") : Html.Raw("<span class='badge' style='background:rgba(239,68,68,.15);color:#ef4444;font-size:.7rem'><i class=\"bi bi-shield-x\"></i> No</span>"))</td>
+                            <td class="small text-muted" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="@a.Notes">@(a.Notes ?? "—")</td>
+                            <td>
+                                @{ var aCss = a.Status switch { "Approved" => "background:rgba(34,197,94,.15);color:#22c55e", "Rejected" => "background:rgba(239,68,68,.15);color:#ef4444", _ => "background:rgba(234,179,8,.15);color:#eab308" }; }
+                                <span class="badge" style="@aCss;font-size:.75rem">@a.Status</span>
+                            </td>
+                            <td>
+                                @if (a.Status == "Pending")
+                                {
+                                    <div class="d-flex gap-1">
+                                        <form asp-action="ApproveDriverApplication" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@a.Id" />
+                                            <button type="submit" class="btn btn-sm" title="Approve" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                        <form asp-action="RejectDriverApplication" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@a.Id" />
+                                            <button type="submit" class="btn btn-sm" title="Reject" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444"><i class="bi bi-x-lg"></i></button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    @* ── Academy Reviews Moderation ──────────────────────────── *@
+    <div class="gym-section-head mb-3 mt-5">
+        <div class="gym-section-dot"></div>
+        <h4><i class="bi bi-star-fill me-2" style="color:var(--gym-orange)"></i>Academy Reviews</h4>
+        @{ var pendingRv = acReviews.Count(r => !r.Approved); }
+        @if (pendingRv > 0) { <span class="ms-2 badge" style="background:var(--gym-orange)">@pendingRv pending</span> }
+        <span class="ms-auto text-muted small">@acReviews.Count total</span>
+    </div>
+
+    <div class="gym-detail-card mb-4">
+        @if (!acReviews.Any())
+        {
+            <p class="text-muted mb-0">No reviews submitted yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table gym-table table-sm mb-0">
+                    <thead><tr><th>Name</th><th>Role</th><th>Stars</th><th>Comment</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    @foreach (var rv in acReviews.OrderByDescending(r => r.CreatedAt))
+                    {
+                        <tr>
+                            <td style="color:var(--text-1);font-weight:600">@rv.ReviewerName @if(rv.IsDemoData){<span class="text-muted" style="font-size:.7rem">(demo)</span>}</td>
+                            <td class="small text-muted">@(rv.ReviewerRole ?? "—")</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    @for (int s = 1; s <= 5; s++)
+                                    { <i class="bi bi-star@(s <= rv.Stars ? "-fill" : "")" style="color:#f59e0b;font-size:.75rem"></i> }
+                                </div>
+                            </td>
+                            <td class="small text-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="@rv.Comment">"@rv.Comment"</td>
+                            <td>
+                                @if (rv.Approved)
+                                { <span class="badge" style="background:rgba(34,197,94,.15);color:#22c55e;font-size:.72rem"><i class="bi bi-check-circle me-1"></i>Approved</span> }
+                                else
+                                { <span class="badge" style="background:rgba(234,179,8,.15);color:#eab308;font-size:.72rem"><i class="bi bi-clock me-1"></i>Pending</span> }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    @if (!rv.Approved)
+                                    {
+                                        <form asp-action="ApproveReview" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@rv.Id" />
+                                            <button type="submit" class="btn btn-sm" title="Approve" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                    }
+                                    <form asp-action="DeleteReview" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@rv.Id" />
+                                        <button type="submit" class="btn btn-sm" title="Delete" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    @* ── Driver Ratings Overview ───────────────────────────────── *@
+    <div class="gym-section-head mb-3 mt-4">
+        <div class="gym-section-dot"></div>
+        <h4><i class="bi bi-star-half me-2" style="color:var(--gym-orange)"></i>Driver Ratings</h4>
+        <a asp-controller="Rating" asp-action="Drivers" class="ms-auto btn btn-gym-dark btn-sm" target="_blank">Public view</a>
+    </div>
+
+    <div class="gym-detail-card">
+        @if (driverRatings == null || !driverRatings.Drivers.Any())
+        {
+            <p class="text-muted mb-0">No driver ratings yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table gym-table table-sm mb-0">
+                    <thead><tr><th>Driver</th><th>Route</th><th>Avg Rating</th><th>Reviews</th><th>Latest Comment</th></tr></thead>
+                    <tbody>
+                    @foreach (var d in driverRatings.Drivers.OrderByDescending(x => x.Average))
+                    {
+                        <tr>
+                            <td style="color:var(--text-1);font-weight:600">@d.FullName</td>
+                            <td><i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@d.Route</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="d-flex gap-1">
+                                        @{ int fs = (int)Math.Floor(d.Average); bool hh = d.Average - fs >= 0.5; }
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= fs) { <i class="bi bi-star-fill" style="color:#f59e0b;font-size:.75rem"></i> }
+                                            else if (i == fs + 1 && hh) { <i class="bi bi-star-half" style="color:#f59e0b;font-size:.75rem"></i> }
+                                            else { <i class="bi bi-star" style="color:#f59e0b;font-size:.75rem"></i> }
+                                        }
+                                    </div>
+                                    <span class="fw-bold small" style="color:var(--gym-orange)">@d.Average</span>
+                                </div>
+                            </td>
+                            <td class="small text-muted">@d.Count</td>
+                            <td class="small text-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                @(d.Latest.FirstOrDefault()?.Comment ?? "—")
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>

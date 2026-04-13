@@ -1,7 +1,10 @@
 ﻿@model List<SuggestionDto>
 @{
     ViewData["Title"] = "Sport & Health Feed";
-    int page = (int)(ViewBag.CurrentPage ?? 1);
+    int page       = (int)(ViewBag.CurrentPage ?? 1);
+    int totalCount  = (int)(ViewBag.TotalCount  ?? 0);
+    int pageSize    = 12;
+    bool hasMore    = totalCount > page * pageSize;
     var banners = ViewBag.Banners as List<AdBannerDto> ?? new();
     int bannerIdx = 0;
     var categoryIcons = new Dictionary<string, (string icon, string css)>(StringComparer.OrdinalIgnoreCase)
@@ -154,12 +157,12 @@
         <div class="d-flex flex-wrap gap-4 py-1">
             <div class="gym-stat-item">
                 <i class="bi bi-people-fill text-orange"></i>
-                <span><strong>@(Model?.Count > 0 ? "1 240+" : "0")</strong> Members</span>
+                <span><strong>1 240+</strong> Members</span>
             </div>
             <div class="gym-stat-sep d-none d-sm-block">·</div>
             <div class="gym-stat-item">
                 <i class="bi bi-calendar-event-fill text-orange"></i>
-                <span><strong>@(Model?.Count ?? 0)</strong> Active Listings</span>
+                <span><strong>@totalCount</strong> Active Listing@(totalCount != 1 ? "s" : "")</span>
             </div>
             <div class="gym-stat-sep d-none d-sm-block">·</div>
             <div class="gym-stat-item">
@@ -202,10 +205,12 @@
     @* ── Page > 1, no more results ────────────────────────────── *@
     @if (page > 1 && (Model == null || !Model.Any()))
     {
+        @* Auto-redirect back to page 1 via meta refresh *@
+        <meta http-equiv="refresh" content="2;url=/?page=1" />
         <div class="gym-empty">
             <div class="gym-empty-icon"><i class="bi bi-check2-all"></i></div>
             <h4 class="fw-bold mb-2" style="color:var(--text-1)">You've seen all the listings!</h4>
-            <p class="text-muted mb-4">There are no more listings on page @(page). Head back to page 1 to browse from the top.</p>
+            <p class="text-muted mb-4">Heading back to page 1…</p>
             <a asp-action="Index" asp-route-page="1" class="btn btn-gym">
                 <i class="bi bi-arrow-left me-1"></i>Back to Page 1
             </a>
@@ -232,14 +237,20 @@
                     <div class="col-12">
                         <a href="@(banner.LinkUrl ?? "#")" target="_blank" rel="noopener"
                            class="gym-ad-banner d-block" title="@banner.BusinessName">
-                            <img src="@banner.ImageUrl" alt="@banner.BusinessName" loading="lazy" />
-                            @if (!string.IsNullOrEmpty(banner.TagLine))
-                            {
-                                <div class="gym-ad-banner-overlay">
-                                    <span class="gym-ad-label"><i class="bi bi-megaphone-fill me-1"></i>Sponsored</span>
-                                    <span class="gym-ad-tagline">@banner.TagLine</span>
+                            <div class="gym-ad-banner-bg">
+                                <img src="@banner.ImageUrl" alt="@banner.BusinessName" loading="lazy"
+                                     onerror="this.style.display='none'" />
+                                <div class="gym-ad-banner-fallback">
+                                    <span class="gym-ad-banner-name">@banner.BusinessName</span>
                                 </div>
-                            }
+                            </div>
+                            <div class="gym-ad-banner-overlay">
+                                <span class="gym-ad-label"><i class="bi bi-megaphone-fill me-1"></i>Sponsored</span>
+                                @if (!string.IsNullOrEmpty(banner.TagLine))
+                                {
+                                    <span class="gym-ad-tagline">@banner.TagLine</span>
+                                }
+                            </div>
                         </a>
                     </div>
                 }
@@ -306,13 +317,16 @@
                         <i class="bi bi-chevron-left"></i>
                     </a>
                 </li>
-                @for (int i = Math.Max(1, page - 2); i <= page + 2; i++)
-                {
-                    <li class="page-item @(i == page ? "active" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
-                    </li>
+                @{
+                    int maxPage = totalCount > 0 ? (int)Math.Ceiling(totalCount / (double)pageSize) : page;
+                    for (int i = Math.Max(1, page - 2); i <= Math.Min(maxPage, page + 2); i++)
+                    {
+                        <li class="page-item @(i == page ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+                        </li>
+                    }
                 }
-                <li class="page-item @(Model.Count < 12 ? "disabled" : "")">
+                <li class="page-item @(!hasMore ? "disabled" : "")">
                     <a class="page-link" asp-action="Index" asp-route-page="@(page + 1)" aria-label="Next">
                         <i class="bi bi-chevron-right"></i>
                     </a>

@@ -627,17 +627,44 @@
     box-shadow: var(--shadow-card);
     text-decoration: none;
 }
-.gym-ad-banner img {
+.gym-ad-banner-bg {
+    position: relative;
     width: 100%;
-    height: 80px;
+    height: 100px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, var(--gym-orange) 100%);
+}
+.gym-ad-banner-bg img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     display: block;
+    z-index: 1;
+}
+.gym-ad-banner-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+}
+.gym-ad-banner-name {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: rgba(255,255,255,.85);
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    text-shadow: 0 2px 8px rgba(0,0,0,.5);
 }
 @media (min-width: 576px) {
-    .gym-ad-banner img { height: 100px; }
+    .gym-ad-banner-bg { height: 120px; }
+    .gym-ad-banner-name { font-size: 1.6rem; }
 }
 @media (min-width: 992px) {
-    .gym-ad-banner img { height: 120px; }
+    .gym-ad-banner-bg { height: 140px; }
+    .gym-ad-banner-name { font-size: 1.8rem; }
 }
 .gym-ad-banner-overlay {
     position: absolute;
@@ -794,8 +821,163 @@
     }
     /* Push main content above bottom nav */
     main { padding-bottom: 70px; }
-    /* Hide top navbar links on mobile — bottom nav handles it */
-    .gym-navbar .navbar-collapse { display: none !important; }
+    /* Top navbar collapse hidden by default on mobile — Bootstrap JS toggles it via .show class */
+    .gym-navbar .navbar-collapse:not(.show) { display: none; }
+}
+
+/* ══════════════════════════════
+   LOADING & FEEDBACK
+══════════════════════════════ */
+
+/* Top progress bar */
+#gym-progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--gym-orange);
+    z-index: 9999;
+    transition: width 0.3s ease, opacity 0.4s ease;
+    box-shadow: 0 0 10px var(--gym-orange-glow);
+    border-radius: 0 2px 2px 0;
+}
+#gym-progress.gym-progress-done {
+    width: 100% !important;
+    opacity: 0;
+}
+
+/* Full-page overlay loader */
+#gym-page-loader {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+}
+#gym-page-loader.active { display: flex; }
+#gym-page-loader .gym-spinner {
+    width: 48px; height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gym-orange);
+    border-radius: 50%;
+    animation: gym-spin-simple 0.7s linear infinite;
+    flex-shrink: 0;
+}
+#gym-page-loader p {
+    color: var(--text-2);
+    font-size: .9rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: .04em;
+}
+
+/* Inline button spinner */
+.btn-gym-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.75;
+}
+.btn-gym-loading .btn-text { opacity: 0; }
+.btn-gym-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px; height: 16px;
+    top: calc(50% - 8px);
+    left: calc(50% - 8px);
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: gym-spin-simple 0.6s linear infinite;
+}
+
+/* Form submit overlay (covers just the form) */
+.gym-form-loading {
+    position: relative;
+    pointer-events: none;
+}
+.gym-form-loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(13,17,23,.55);
+    border-radius: var(--radius);
+    z-index: 10;
+    backdrop-filter: blur(2px);
+}
+
+/* Skeleton pulse cards */
+.gym-skeleton {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.gym-skeleton-line {
+    background: linear-gradient(90deg, var(--bg-card-2) 25%, var(--border) 50%, var(--bg-card-2) 75%);
+    background-size: 200% 100%;
+    animation: gym-shimmer 1.4s infinite;
+    border-radius: 6px;
+    height: 14px;
+}
+.gym-skeleton-line.lg { height: 22px; }
+.gym-skeleton-line.sm { height: 10px; }
+.gym-skeleton-img {
+    background: linear-gradient(90deg, var(--bg-card-2) 25%, var(--border) 50%, var(--bg-card-2) 75%);
+    background-size: 200% 100%;
+    animation: gym-shimmer 1.4s infinite;
+    width: 100%;
+    height: 160px;
+}
+
+@keyframes gym-spin-simple {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+@keyframes gym-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Toast notifications */
+#gym-toast-container {
+    position: fixed;
+    bottom: 80px;
+    right: 1rem;
+    z-index: 9995;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    max-width: 320px;
+}
+@media (min-width: 768px) {
+    #gym-toast-container { bottom: 1.5rem; }
+}
+.gym-toast {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    color: var(--text-1);
+    font-size: .88rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    box-shadow: var(--shadow-card);
+    animation: gym-toast-in .25s ease;
+    transition: opacity .3s ease, transform .3s ease;
+}
+.gym-toast.success { border-left: 3px solid #22c55e; }
+.gym-toast.error   { border-left: 3px solid #ef4444; }
+.gym-toast.info    { border-left: 3px solid var(--gym-orange); }
+.gym-toast.hiding  { opacity: 0; transform: translateX(20px); }
+@keyframes gym-toast-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
 }
 
 /* ══════════════════════════════

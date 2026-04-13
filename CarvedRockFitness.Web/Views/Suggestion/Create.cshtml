@@ -27,7 +27,7 @@
             </h2>
             <p class="mb-4" style="color:var(--text-3)">Share your sport event, session, or service with South Africa's fitness community.</p>
 
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <form asp-action="Create" method="post" data-loading-msg="Posting your listing…" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-4"></div>
 
                 @*Section 1: Meetup Details*@

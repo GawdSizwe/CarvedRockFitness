@@ -54,7 +54,9 @@ builder.Services.AddAuthentication(options =>
                 }
                 else
                 {
+                    // Refresh failed — sign out the cookie so the user gets a clean re-login
                     ctx.RejectPrincipal();
+                    await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 }
             }
         }
@@ -95,6 +97,10 @@ builder.Services.AddScoped<PayFastService>();
 builder.Services.AddHttpClient("GymApi", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"]!);
+});
+builder.Services.AddHttpClient("AuthApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Oidc:Authority"]!);
 });
 
 var app = builder.Build();

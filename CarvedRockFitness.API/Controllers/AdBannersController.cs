@@ -1,5 +1,6 @@
 using CarvedRockFitness.API.DbContexts;
 using CarvedRockFitness.API.Entities;
+using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ namespace CarvedRockFitness.API.Controllers;
 [ApiController]
 [Route("banners")]
 [Produces("application/json")]
-public class AdBannersController(CarvedRockFitnessDbContext db, IConfiguration config) : ControllerBase
+public class AdBannersController(CarvedRockFitnessDbContext db, RuntimeSettingsService settings) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
@@ -18,7 +19,7 @@ public class AdBannersController(CarvedRockFitnessDbContext db, IConfiguration c
     {
         try
         {
-            var showDemo = config.GetValue("SeedData:DemoSuggestionsVisible", true);
+            var showDemo = settings.DemoSuggestionsVisible;
 
             var banners = await db.AdBanners
                 .Where(b => b.IsActive && (showDemo || !b.IsDemoData))

@@ -22,6 +22,332 @@ namespace CarvedRockFitness.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CarvedRockFitness.API.Entities.AcademyRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AssignedRoute")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDemoData")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NeedsTransport")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentPhone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PickupAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PlayerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Sport")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AcademyRegistrations");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Age = 12,
+                            AssignedRoute = "Tembisa CBD",
+                            CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = true,
+                            ParentEmail = "nomsa@email.com",
+                            ParentName = "Nomsa Dlamini",
+                            ParentPhone = "083 111 2001",
+                            PickupAddress = "Tembisa CBD",
+                            PlayerName = "Sipho Dlamini",
+                            Sport = "Football",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Age = 14,
+                            AssignedRoute = "Ivory Park",
+                            CreatedAt = new DateTime(2025, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = true,
+                            ParentEmail = "grace@email.com",
+                            ParentName = "Grace Mokoena",
+                            ParentPhone = "072 222 3002",
+                            PickupAddress = "Ivory Park",
+                            PlayerName = "Thabo Mokoena",
+                            Sport = "Football",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Age = 10,
+                            CreatedAt = new DateTime(2025, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = false,
+                            ParentEmail = "peter@email.com",
+                            ParentName = "Peter Khumalo",
+                            ParentPhone = "061 333 4003",
+                            PlayerName = "Lerato Khumalo",
+                            Sport = "Cricket",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Age = 11,
+                            AssignedRoute = "Kwa-Thema",
+                            CreatedAt = new DateTime(2025, 2, 8, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = true,
+                            ParentEmail = "maria@email.com",
+                            ParentName = "Maria Sithole",
+                            ParentPhone = "082 444 5004",
+                            PickupAddress = "Kwa-Thema",
+                            PlayerName = "Naledi Sithole",
+                            Sport = "Athletics",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Age = 16,
+                            AssignedRoute = "Rabie Ridge",
+                            CreatedAt = new DateTime(2025, 2, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = true,
+                            ParentEmail = "james@email.com",
+                            ParentName = "James Mthembu",
+                            ParentPhone = "073 555 6005",
+                            PickupAddress = "Rabie Ridge",
+                            PlayerName = "Kabelo Mthembu",
+                            Sport = "Football",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Age = 9,
+                            CreatedAt = new DateTime(2025, 2, 12, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = false,
+                            ParentEmail = "ruth@email.com",
+                            ParentName = "Ruth Nkosi",
+                            ParentPhone = "084 666 7006",
+                            PlayerName = "Zanele Nkosi",
+                            Sport = "Tennis",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Age = 13,
+                            AssignedRoute = "Ebony Park",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = true,
+                            ParentEmail = "david@email.com",
+                            ParentName = "David Zulu",
+                            ParentPhone = "065 777 8007",
+                            PickupAddress = "Ebony Park",
+                            PlayerName = "Bongani Zulu",
+                            Sport = "Football",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Age = 15,
+                            AssignedRoute = "Clayville",
+                            CreatedAt = new DateTime(2025, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = true,
+                            ParentEmail = "sarah@email.com",
+                            ParentName = "Sarah Mahlangu",
+                            ParentPhone = "071 888 9008",
+                            PickupAddress = "Clayville",
+                            PlayerName = "Mpho Mahlangu",
+                            Sport = "Cricket",
+                            Status = "Confirmed"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Age = 8,
+                            CreatedAt = new DateTime(2025, 3, 5, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = false,
+                            ParentEmail = "linda@email.com",
+                            ParentName = "Linda Ndlovu",
+                            ParentPhone = "062 999 1009",
+                            PlayerName = "Ayanda Ndlovu",
+                            Sport = "Athletics",
+                            Status = "Pending"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Age = 17,
+                            AssignedRoute = "Tembisa CBD",
+                            CreatedAt = new DateTime(2025, 3, 8, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = true,
+                            ParentEmail = "anna@email.com",
+                            ParentName = "Anna Molefe",
+                            ParentPhone = "083 101 2010",
+                            PickupAddress = "Tembisa CBD",
+                            PlayerName = "Tshepo Molefe",
+                            Sport = "Football",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Age = 11,
+                            CreatedAt = new DateTime(2025, 3, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = false,
+                            ParentEmail = "joseph@email.com",
+                            ParentName = "Joseph Maseko",
+                            ParentPhone = "074 202 3011",
+                            PlayerName = "Palesa Maseko",
+                            Sport = "Tennis",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Age = 14,
+                            AssignedRoute = "Ivory Park",
+                            CreatedAt = new DateTime(2025, 3, 12, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsDemoData = true,
+                            NeedsTransport = true,
+                            ParentEmail = "thandi@email.com",
+                            ParentName = "Thandi Cele",
+                            ParentPhone = "081 303 4012",
+                            PickupAddress = "Ivory Park",
+                            PlayerName = "Siyabonga Cele",
+                            Sport = "Cricket",
+                            Status = "Active"
+                        });
+                });
+
+            modelBuilder.Entity("CarvedRockFitness.API.Entities.AdBanner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BusinessName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDemoData")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LinkUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TagLine")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AdBanners");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BusinessName = "Tembisa Sports Gear",
+                            CreatedAt = new DateTime(2025, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ImageUrl = "https://placehold.co/800x200/FF6B00/FFFFFF?text=Tembisa+Sports+Gear",
+                            IsActive = true,
+                            IsDemoData = true,
+                            LinkUrl = "#",
+                            TagLine = "Boots, kits & balls — delivered to your door"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            BusinessName = "Soweto Shisanyama",
+                            CreatedAt = new DateTime(2025, 3, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ImageUrl = "https://placehold.co/800x200/1A1A2E/FF6B00?text=Soweto+Shisanyama",
+                            IsActive = true,
+                            IsDemoData = true,
+                            LinkUrl = "#",
+                            TagLine = "After the game, celebrate with us — Alexandra"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BusinessName = "YVEDA Academy",
+                            CreatedAt = new DateTime(2025, 3, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ImageUrl = "https://placehold.co/800x200/003366/FFD700?text=YVEDA+Elite+Development",
+                            IsActive = true,
+                            IsDemoData = true,
+                            LinkUrl = "#",
+                            TagLine = "Building champions in sport. Shaping leaders in life."
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BusinessName = "Capitec Bank",
+                            CreatedAt = new DateTime(2025, 3, 4, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ImageUrl = "https://placehold.co/800x200/007B5E/FFFFFF?text=Capitec+Bank",
+                            IsActive = true,
+                            IsDemoData = true,
+                            LinkUrl = "#",
+                            TagLine = "Pay your sport fees instantly with Capitec Pay"
+                        });
+                });
+
             modelBuilder.Entity("CarvedRockFitness.API.Entities.ContactDetail", b =>
                 {
                     b.Property<int>("Id")
@@ -333,6 +659,12 @@ namespace CarvedRockFitness.API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CreatedByEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedByName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -343,11 +675,8 @@ namespace CarvedRockFitness.API.Migrations
                     b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("Longitude")
-                        .HasColumnType("float");
+                    b.Property<bool>("IsDemoData")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("bit");
@@ -355,21 +684,21 @@ namespace CarvedRockFitness.API.Migrations
                     b.Property<bool>("IsPinned")
                         .HasColumnType("bit");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
 
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedByEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedByName")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -382,156 +711,168 @@ namespace CarvedRockFitness.API.Migrations
                             Id = 1,
                             Category = "HIIT",
                             CreatedAt = new DateTime(2025, 3, 1, 6, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "John Doe",
                             Description = "High intensity interval training for all levels. 45 min sweat session — bring water and a towel. Coach-led, limited to 20 people.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Cape Town, Woodstock",
                             Priority = 0,
-                            Title = "Morning HIIT at CityRock",
-                            CreatedByName = "John Doe"
+                            Title = "Morning HIIT at CityRock"
                         },
                         new
                         {
                             Id = 2,
                             Category = "Yoga",
                             CreatedAt = new DateTime(2025, 3, 5, 7, 30, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "Jane Smith",
                             Description = "Slow-paced yoga and mobility work. Perfect active recovery for athletes. All levels welcome, mats provided.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Johannesburg, Sandton",
                             Priority = 0,
-                            Title = "Sunday Yoga & Mobility Flow",
-                            CreatedByName = "Jane Smith"
+                            Title = "Sunday Yoga & Mobility Flow"
                         },
                         new
                         {
                             Id = 3,
                             Category = "Strength",
                             CreatedAt = new DateTime(2025, 3, 8, 18, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "Mike Johnson",
                             Description = "Squat, bench and deadlift coaching every Thursday evening. Spotters available. Bring your programme and let's grind.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Durban, Umhlanga",
                             Priority = 0,
-                            Title = "Powerlifting Club — Weekly Meet",
-                            CreatedByName = "Mike Johnson"
+                            Title = "Powerlifting Club — Weekly Meet"
                         },
                         new
                         {
                             Id = 4,
                             Category = "Running",
                             CreatedAt = new DateTime(2025, 3, 10, 7, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "John Doe",
                             Description = "Friendly running group every Saturday at 7am. All paces welcome — from first-timers to 20-minute runners. We grab coffee after.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Pretoria, Groenkloof",
                             Priority = 0,
-                            Title = "5km Park Run Social Group",
-                            CreatedByName = "John Doe"
+                            Title = "5km Park Run Social Group"
                         },
                         new
                         {
                             Id = 5,
                             Category = "Boxing",
                             CreatedAt = new DateTime(2025, 3, 12, 17, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "Jane Smith",
                             Description = "Cardio boxing with bag work and partner drills. No experience needed. Get fit, relieve stress, meet great people.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Cape Town, Green Point",
                             Priority = 0,
-                            Title = "Boxing Conditioning Class",
-                            CreatedByName = "Jane Smith"
+                            Title = "Boxing Conditioning Class"
                         },
                         new
                         {
                             Id = 6,
                             Category = "CrossFit",
                             CreatedAt = new DateTime(2025, 3, 15, 6, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "Mike Johnson",
                             Description = "Open community workout of the day. All athletes welcome regardless of level. Scaled and RX options available. Let's suffer together!",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Johannesburg, Fourways",
                             Priority = 0,
-                            Title = "CrossFit Open Community WOD",
-                            CreatedByName = "Mike Johnson"
+                            Title = "CrossFit Open Community WOD"
                         },
                         new
                         {
                             Id = 7,
                             Category = "Football",
                             CreatedAt = new DateTime(2025, 3, 20, 8, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "John Doe",
                             Description = "Weekly Sunday league for ages 16+. 11-a-side, kick-off at 9am. Bring your boots and your game. All skill levels welcome. Teams of 11 or join as a free agent.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Soweto, Meadowlands",
                             Priority = 0,
-                            Title = "Sunday League Football — Soweto",
-                            CreatedByName = "John Doe"
+                            Title = "Sunday League Football — Soweto"
                         },
                         new
                         {
                             Id = 8,
                             Category = "Football",
                             CreatedAt = new DateTime(2025, 3, 22, 16, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "Jane Smith",
                             Description = "Friday evening 5-a-side at the Alex community pitch. R20 per player. Goalkeepers especially needed. WhatsApp to confirm your spot before 2pm on Friday.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Alexandra, Johannesburg",
                             Priority = 0,
-                            Title = "5-a-Side Football — Alexandra",
-                            CreatedByName = "Jane Smith"
+                            Title = "5-a-Side Football — Alexandra"
                         },
                         new
                         {
                             Id = 9,
                             Category = "Cricket",
                             CreatedAt = new DateTime(2025, 3, 24, 8, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "Mike Johnson",
                             Description = "Saturday morning cricket league for adults. Batting, bowling and fielding coaching included. Bats and pads provided for new players. Competitive and friendly atmosphere.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Tembisa, Kempton Park",
                             Priority = 0,
-                            Title = "Township Cricket League — Tembisa",
-                            CreatedByName = "Mike Johnson"
+                            Title = "Township Cricket League — Tembisa"
                         },
                         new
                         {
                             Id = 10,
                             Category = "Cycling",
                             CreatedAt = new DateTime(2025, 3, 26, 6, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "John Doe",
                             Description = "Road cycling group every Saturday 6am. Routes from 30km to 80km. All road bikes welcome. Safety briefing before each ride. Coffee stop at 40km mark.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Pretoria East, Garsfontein",
                             Priority = 0,
-                            Title = "Morning Cycling Club — Pretoria East",
-                            CreatedByName = "John Doe"
+                            Title = "Morning Cycling Club — Pretoria East"
                         },
                         new
                         {
                             Id = 11,
                             Category = "Tennis",
                             CreatedAt = new DateTime(2025, 3, 28, 10, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "Jane Smith",
                             Description = "Tennis lessons for beginners aged 8–16. Qualified coach with 10 years experience. Rackets provided. Small groups of max 6 kids. Saturdays 10am–12pm.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Sandton, Johannesburg",
                             Priority = 0,
-                            Title = "Kids Tennis Coaching — Sandton",
-                            CreatedByName = "Jane Smith"
+                            Title = "Kids Tennis Coaching — Sandton"
                         },
                         new
                         {
                             Id = 12,
                             Category = "Transport",
                             CreatedAt = new DateTime(2025, 3, 30, 7, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedByName = "Mike Johnson",
                             Description = "Reliable transport for kids to SA Young Vision Elite Development Academy (YVEDA). Tembisa pickup routes available. R300/month. Verified driver, police clearance held. WhatsApp to book.",
+                            IsDemoData = true,
                             IsHidden = false,
                             IsPinned = false,
                             Location = "Tembisa, Kempton Park",
                             Priority = 0,
-                            Title = "Kids Transport — Tembisa to YVEDA",
-                            CreatedByName = "Mike Johnson"
+                            Title = "Kids Transport — Tembisa to YVEDA"
                         });
                 });
 

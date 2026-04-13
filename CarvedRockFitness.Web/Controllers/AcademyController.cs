@@ -1,18 +1,41 @@
+using CarvedRockFitness.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarvedRockFitness.Web.Controllers;
 
-public class AcademyController : Controller
+public class AcademyController(ApiService apiService) : Controller
 {
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index()
+    {
+        var statsTask   = apiService.GetAcademyStatsAsync();
+        var driversTask = apiService.GetActiveDriversAsync();
+        var reviewsTask = apiService.GetAcademyReviewsAsync();
+        await Task.WhenAll(statsTask, driversTask, reviewsTask);
+        ViewBag.Stats   = statsTask.Result;
+        ViewBag.Drivers = driversTask.Result;
+        ViewBag.Reviews = reviewsTask.Result;
+        return View();
+    }
 
     public IActionResult Register() => View();
 
     [HttpPost]
-    public IActionResult Register(AcademyRegisterRequest model)
+    public async Task<IActionResult> Register(AcademyRegisterRequest model)
     {
         if (!ModelState.IsValid) return View(model);
-        TempData["RegisterSuccess"] = $"Registration received for {model.PlayerName}! We will contact {model.ParentEmail} within 24 hours.";
+
+        var dto = new AcademyRegisterDto(
+            model.PlayerName, model.Age, model.Sport,
+            model.ParentName, model.ParentEmail, model.ParentPhone,
+            model.NeedsTransport, model.PickupAddress, model.Notes);
+
+        var (ok, message) = await apiService.RegisterAcademyPlayerAsync(dto);
+
+        if (ok)
+            TempData["RegisterSuccess"] = $"{message} We will contact {model.ParentEmail} within 24 hours.";
+        else
+            TempData["RegisterError"] = message;
+
         return RedirectToAction(nameof(Index));
     }
 }

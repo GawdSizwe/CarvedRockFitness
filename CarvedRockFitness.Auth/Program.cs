@@ -105,6 +105,9 @@ builder.Services.AddOpenIddict()
 
         options.AllowClientCredentialsFlow(); // Machine-to-machine
 
+        // Disable encryption so the API's standard JWT Bearer middleware can validate tokens
+        options.DisableAccessTokenEncryption();
+
         // Scopes this server can grant
         options.RegisterScopes(
             OpenIddictConstants.Scopes.OpenId,
@@ -202,32 +205,59 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
+    // Register gym-api scope with resource so 'aud' claim is populated in access tokens
+    var scopeManager = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
+    if (await scopeManager.FindByNameAsync("gym-api") == null)
+    {
+        await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+        {
+            Name = "gym-api",
+            DisplayName = "Gym API",
+            Resources = { "gym-api" }
+        });
+    }
+
     var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
-    if (await manager.FindByClientIdAsync("gym-web") == null)
+    var gymWebDescriptor = new OpenIddictApplicationDescriptor
     {
-        await manager.CreateAsync(new OpenIddictApplicationDescriptor
+        ClientId = "gym-web",
+        ClientType = OpenIddictConstants.ClientTypes.Public,
+        DisplayName = "Gym Meetups Web",
+        RedirectUris =
         {
-            ClientId = "gym-web",
-            ClientType = OpenIddictConstants.ClientTypes.Public,
-            DisplayName = "Gym Meetups Web",
-            RedirectUris = { new Uri("https://localhost:5001/signin-oidc") },
-            PostLogoutRedirectUris = { new Uri("https://localhost:5001/signout-callback-oidc") },
-            Permissions =
-            {
-                OpenIddictConstants.Permissions.Endpoints.Authorization,
-                OpenIddictConstants.Permissions.Endpoints.Token,
-                OpenIddictConstants.Permissions.Endpoints.Logout,
-                OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
-                OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
-                OpenIddictConstants.Permissions.ResponseTypes.Code,
-                OpenIddictConstants.Permissions.Scopes.Email,
-                OpenIddictConstants.Permissions.Scopes.Profile,
-                OpenIddictConstants.Permissions.Scopes.Roles,
-                OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictConstants.Scopes.OfflineAccess,
-                OpenIddictConstants.Permissions.Prefixes.Scope + "gym-api"
-            }
-        });
+            new Uri("https://localhost:5001/signin-oidc"),
+            new Uri("https://gawdsizwe-web.fly.dev/signin-oidc")
+        },
+        PostLogoutRedirectUris =
+        {
+            new Uri("https://localhost:5001/signout-callback-oidc"),
+            new Uri("https://gawdsizwe-web.fly.dev/signout-callback-oidc")
+        },
+        Permissions =
+        {
+            OpenIddictConstants.Permissions.Endpoints.Authorization,
+            OpenIddictConstants.Permissions.Endpoints.Token,
+            OpenIddictConstants.Permissions.Endpoints.Logout,
+            OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+            OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+            OpenIddictConstants.Permissions.ResponseTypes.Code,
+            OpenIddictConstants.Permissions.Scopes.Email,
+            OpenIddictConstants.Permissions.Scopes.Profile,
+            OpenIddictConstants.Permissions.Scopes.Roles,
+            OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictConstants.Scopes.OfflineAccess,
+            OpenIddictConstants.Permissions.Prefixes.Scope + "gym-api"
+        }
+    };
+
+    var existing = await manager.FindByClientIdAsync("gym-web");
+    if (existing == null)
+    {
+        await manager.CreateAsync(gymWebDescriptor);
+    }
+    else
+    {
+        await manager.UpdateAsync(existing, gymWebDescriptor);
     }
 }
 

@@ -47,6 +47,7 @@ public class AuthorizationController(
                 .SetClaims(OpenIddictConstants.Claims.Role, [.. (await userManager.GetRolesAsync(user))]);
 
         identity.SetScopes(request.GetScopes());
+        identity.SetResources("gym-api");
         identity.SetDestinations(GetDestinations);
 
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
@@ -75,6 +76,7 @@ public class AuthorizationController(
                     .SetClaim(OpenIddictConstants.Claims.Name, user.FullName)
                     .SetClaims(OpenIddictConstants.Claims.Role, [.. (await userManager.GetRolesAsync(user))]);
 
+            identity.SetResources("gym-api");
             identity.SetDestinations(GetDestinations);
 
             return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);

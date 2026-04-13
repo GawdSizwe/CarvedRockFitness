@@ -1,5 +1,8 @@
+@using CarvedRockFitness.Web.Services
 @{
     ViewData["Title"] = "YVEDA Academy";
+    var stats   = ViewBag.Stats as AcademyStatsDto;
+    var drivers = ViewBag.Drivers as List<DriverDto> ?? new List<DriverDto>();
 }
 
 @if (TempData["RegisterSuccess"] != null)
@@ -8,6 +11,15 @@
         <div class="alert alert-success d-flex align-items-center gap-2">
             <i class="bi bi-check-circle-fill fs-5"></i>
             <span>@TempData["RegisterSuccess"]</span>
+        </div>
+    </div>
+}
+@if (TempData["RegisterError"] != null)
+{
+    <div class="container pt-4">
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <span>@TempData["RegisterError"]</span>
         </div>
     </div>
 }
@@ -40,10 +52,10 @@
 <div class="gym-stats-strip py-3 mb-5">
     <div class="container">
         <div class="d-flex flex-wrap justify-content-center gap-4 text-center">
-            <div><div class="gym-stat-number" style="font-size:1.8rem">120+</div><div class="gym-stat-label">Active Players</div></div>
-            <div><div class="gym-stat-number" style="font-size:1.8rem">4</div><div class="gym-stat-label">Sports Offered</div></div>
-            <div><div class="gym-stat-number" style="font-size:1.8rem">8</div><div class="gym-stat-label">Qualified Coaches</div></div>
-            <div><div class="gym-stat-number" style="font-size:1.8rem">6</div><div class="gym-stat-label">Transport Routes</div></div>
+            <div><div class="gym-stat-number" style="font-size:1.8rem">@(stats?.ActivePlayers ?? 0)</div><div class="gym-stat-label">Active Players</div></div>
+            <div><div class="gym-stat-number" style="font-size:1.8rem">@(stats?.SportsOffered ?? 0)</div><div class="gym-stat-label">Sports Offered</div></div>
+            <div><div class="gym-stat-number" style="font-size:1.8rem">@(stats?.TransportUsers ?? 0)</div><div class="gym-stat-label">On Transport</div></div>
+            <div><div class="gym-stat-number" style="font-size:1.8rem">@(stats?.Routes ?? 0)</div><div class="gym-stat-label">Transport Routes</div></div>
         </div>
     </div>
 </div>
@@ -121,41 +133,119 @@
         </div>
         <div class="col-md-6">
             <div class="gym-detail-card h-100">
-                <h5 class="fw-bold mb-3" style="color:var(--text-1)">Active Routes</h5>
-                @{
-                    var routes = new[]
-                    {
-                        ("Tembisa CBD", "6:45am", "5:30pm"),
-                        ("Kwa-Thema", "6:50am", "5:35pm"),
-                        ("Ivory Park", "7:00am", "5:45pm"),
-                        ("Clayville", "7:10am", "5:50pm"),
-                        ("Rabie Ridge", "7:15am", "5:55pm"),
-                        ("Ebony Park", "7:20am", "6:00pm"),
-                    };
+                <h5 class="fw-bold mb-3" style="color:var(--text-1)">
+                    Active Routes &amp; Drivers
+                    <span class="ms-2 badge" style="background:rgba(249,115,22,.15);color:var(--gym-orange);font-size:.75rem">@drivers.Count active</span>
+                </h5>
+                @if (!drivers.Any())
+                {
+                    <p class="text-muted small">No routes active yet — check back soon.</p>
                 }
-                <div class="table-responsive">
-                    <table class="table gym-table mb-3">
-                        <thead>
-                            <tr><th>Pickup Area</th><th>Morning</th><th>Afternoon</th></tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var (area, morning, afternoon) in routes)
-                            {
-                                <tr>
-                                    <td style="color:var(--text-1)"><i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@area</td>
-                                    <td style="color:var(--text-3);font-size:.85rem">@morning</td>
-                                    <td style="color:var(--text-3);font-size:.85rem">@afternoon</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                else
+                {
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        @foreach (var driver in drivers.OrderBy(d => d.Route))
+                        {
+                            <div class="d-flex align-items-center gap-3 p-2 rounded" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)">
+                                <div style="width:36px;height:36px;border-radius:50%;background:rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                    <i class="bi bi-person-fill" style="color:var(--gym-orange)"></i>
+                                </div>
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="fw-semibold" style="color:var(--text-1);font-size:.9rem">
+                                        <i class="bi bi-geo-alt-fill me-1" style="color:var(--gym-orange)"></i>@driver.Route
+                                    </div>
+                                    <div class="text-muted" style="font-size:.78rem">
+                                        @driver.FullName &bull; @driver.Vehicle
+                                    </div>
+                                </div>
+                                <div class="text-end flex-shrink-0">
+                                    @if (driver.PoliceClearance)
+                                    {
+                                        <span class="badge" style="background:rgba(34,197,94,.15);color:#22c55e;font-size:.7rem"><i class="bi bi-shield-check me-1"></i>Cleared</span>
+                                    }
+                                    <div class="text-muted" style="font-size:.75rem">@driver.Capacity seats</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                <div class="d-flex flex-column gap-2">
+                    <a asp-controller="Payment" asp-action="Checkout" asp-route-plan="academy" class="btn btn-gym w-100">
+                        <i class="bi bi-bus-front-fill me-2"></i>Book a Seat — R300/month
+                    </a>
+                    <a asp-controller="Transport" asp-action="Apply" class="btn btn-gym-dark w-100">
+                        <i class="bi bi-person-badge-fill me-2"></i>Apply to Drive for YVEDA
+                    </a>
                 </div>
-                <a asp-controller="Payment" asp-action="Checkout" asp-route-plan="academy" class="btn btn-gym w-100">
-                    <i class="bi bi-bus-front-fill me-2"></i>Book a Seat — R300/month
-                </a>
             </div>
         </div>
     </div>
+
+    @* Reviews section *@
+    @{
+        var reviews = ViewBag.Reviews as AcademyReviewsResultDto;
+        var reviewList = reviews?.Reviews ?? new List<AcademyReviewItemDto>();
+    }
+    <div class="gym-section-head mb-4 mt-2">
+        <div class="gym-section-dot"></div>
+        <h2><i class="bi bi-star-fill me-2" style="color:var(--gym-orange)"></i>What Families Say</h2>
+        @if ((reviews?.Count ?? 0) > 0)
+        {
+            <div class="ms-3 d-flex align-items-center gap-1">
+                @{ int fS = (int)Math.Floor(reviews!.Average); bool hH = reviews.Average - fS >= 0.5; }
+                @for (int i = 1; i <= 5; i++)
+                {
+                    if (i <= fS) { <i class="bi bi-star-fill" style="color:#f59e0b;font-size:.9rem"></i> }
+                    else if (i == fS + 1 && hH) { <i class="bi bi-star-half" style="color:#f59e0b;font-size:.9rem"></i> }
+                    else { <i class="bi bi-star" style="color:#f59e0b;font-size:.9rem"></i> }
+                }
+                <span class="ms-1 text-muted small">@reviews.Average / 5 (@reviews.Count reviews)</span>
+            </div>
+        }
+        <a asp-controller="Rating" asp-action="Academy" class="ms-auto btn btn-gym btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Add Review
+        </a>
+    </div>
+
+    @if (reviewList.Any())
+    {
+        <div class="row g-3 mb-5">
+            @foreach (var rv in reviewList.Take(3))
+            {
+                <div class="col-md-4">
+                    <div class="gym-detail-card h-100">
+                        <div class="d-flex gap-1 mb-2">
+                            @for (int s = 1; s <= 5; s++)
+                            { <i class="bi bi-star@(s <= rv.Stars ? "-fill" : "")" style="color:#f59e0b;font-size:.85rem"></i> }
+                        </div>
+                        <p class="text-muted mb-2 fst-italic" style="font-size:.9rem">"@rv.Comment"</p>
+                        <div class="d-flex align-items-center gap-2 mt-auto">
+                            <div style="width:28px;height:28px;border-radius:50%;background:rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--gym-orange)">@rv.ReviewerName[0]</div>
+                            <div>
+                                <div class="small fw-semibold" style="color:var(--text-1)">@rv.ReviewerName</div>
+                                @if (!string.IsNullOrEmpty(rv.ReviewerRole)) { <div class="text-muted" style="font-size:.72rem">@rv.ReviewerRole</div> }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        @if (reviewList.Count > 3)
+        {
+            <div class="text-center mb-5">
+                <a asp-controller="Rating" asp-action="Academy" class="btn btn-gym-dark">
+                    See all @reviewList.Count reviews →
+                </a>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="gym-detail-card text-center py-4 mb-5">
+            <p class="text-muted mb-2">No reviews yet — be the first!</p>
+            <a asp-controller="Rating" asp-action="Academy" class="btn btn-gym btn-sm">Leave a Review</a>
+        </div>
+    }
 
     @* CTA register *@
     <div class="gym-detail-card text-center py-5">

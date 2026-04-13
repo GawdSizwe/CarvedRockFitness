@@ -18,9 +18,14 @@ public class HomeController : Controller
     {
         List<SuggestionDto> suggestions = [];
         List<AdBannerDto>   banners     = [];
+        int totalCount = 0;
         try
         {
-            suggestions = await _apiService.GetSuggestionsAsync(page);
+            var suggestionsTask = _apiService.GetSuggestionsAsync(page);
+            var countTask       = _apiService.GetSuggestionsCountAsync();
+            await Task.WhenAll(suggestionsTask, countTask);
+            suggestions = suggestionsTask.Result;
+            totalCount  = countTask.Result;
         }
         catch (HttpRequestException)
         {
@@ -39,8 +44,9 @@ public class HomeController : Controller
         {
             // Banners are non-critical — silently degrade
         }
-        ViewBag.CurrentPage = page;
-        ViewBag.Banners     = banners;
+        ViewBag.CurrentPage  = page;
+        ViewBag.TotalCount   = totalCount;
+        ViewBag.Banners      = banners;
         return View(suggestions);
     }
 
