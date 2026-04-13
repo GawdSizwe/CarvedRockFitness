@@ -1,306 +1,206 @@
-﻿# KasiMeetups � CarvedRock Fitness Platform
+﻿# KasiMeetups — CarvedRock Fitness Platform
 
-<div align="center">
+[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
+[![C#](https://img.shields.io/badge/C%23-13.0-239120?logo=csharp)](https://learn.microsoft.com/en-us/dotnet/csharp/)
+[![EF Core](https://img.shields.io/badge/EF_Core-9.0-512BD4?logo=dotnet)](https://docs.microsoft.com/ef/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?logo=postgresql)](https://www.postgresql.org)
+[![OpenIddict](https://img.shields.io/badge/OpenIddict-5.4-blueviolet)](https://github.com/openiddict/openiddict-core)
+[![Fly.io](https://img.shields.io/badge/Fly.io-LIVE-8B5CF6?logo=fly.io)](https://fly.io)
 
-![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![C#](https://img.shields.io/badge/C%23-13.0-239120?style=for-the-badge&logo=csharp&logoColor=white)
-![EF Core](https://img.shields.io/badge/EF_Core-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![OpenIddict](https://img.shields.io/badge/OpenIddict-5.4-blue?style=for-the-badge)
-![Fly.io](https://img.shields.io/badge/Fly.io-Live-8B5CF6?style=for-the-badge)
+> **Enterprise-grade community platform** built on ASP.NET Core 9 — microservices architecture, OAuth2/OpenID Connect identity, role-based access control, per-endpoint rate limiting, and split health checks. Live in Johannesburg (JNB).
+>
+> _Clean Architecture · OAuth2/OpenID Connect · Role-Based Access · Live on Fly.io_
 
-**Enterprise-grade fitness community platform built on ASP.NET Core 9**
-
-*Clean Architecture � OAuth2/OpenID Connect � Role-Based Access � Live on Fly.io*
-
-[Live Demo](#-live-demo) �
-[Architecture](#-architecture) �
-[Quick Start](#-quick-start) �
-[Features](#-features) �
-[Deployment](#-deployment)
-
-</div>
+[Live Demo](#live-demo) · [Architecture](#architecture) · [Quick Start](#quick-start) · [Features](#features) · [Deployment](#deployment) · [Observability](#observability)
 
 ---
 
-## ?? Author
+## Author
 
 | | |
 |---|---|
-| **Sizwe Mazibuko** | Software Engineer / Tech Lead |
-| GitHub | [github.com/GawdSizwe](https://github.com/GawdSizwe) |
-| Email | smazibuko01@gmail.com |
+| **Name** | Sizwe Mazibuko |
+| **Role** | Software Engineer / Tech Lead |
+| **GitHub** | [github.com/GawdSizwe](https://github.com/GawdSizwe) |
+| **Email** | smazibuko01@gmail.com |
 
 ---
 
-## ?? Live Demo
+## Live Demo
 
-| Service | URL |
-|---------|-----|
-| **Web App** | https://gawdsizwe-web.fly.dev |
-| **Auth Server** | https://gawdsizwe-auth.fly.dev |
-| **API** | https://gawdsizwe-api.fly.dev |
+| Service | URL | Status |
+|---------|-----|--------|
+| Web App | https://gawdsizwe-web.fly.dev | Live |
+| REST API | https://gawdsizwe-api.fly.dev | Live |
+| Auth Server | https://gawdsizwe-auth.fly.dev | Live |
+| API Health | https://gawdsizwe-api.fly.dev/healthz | Live |
 
 ### Demo Credentials
 
-| Username | Password | Role | Access |
-|----------|----------|------|--------|
-| `admin@kasimeetups.com` | `Admin123!` | Admin | Full platform access, admin dashboard, user management |
-| `paid@kasimeetups.com` | `Paid123!` | PaidUser | Academy, transport, ratings, suggestions |
-| `free@kasimeetups.com` | `Free123!` | FreeUser | Browse only, upgrade prompts |
-
-> Register a new account at `/account/register` to test the self-service flow.
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@kasimeetups.co.za | Admin1234! |
+| Member | member@kasimeetups.co.za | Member1234! |
 
 ---
 
-## ?? Architecture
+## Architecture
+
+Four independently deployed microservices — each with a single responsibility, zero shared state, all communicating over HTTPS with signed JWT tokens.
 
 ```
-+-----------------------------------------------------+
-�                   Fly.io Cloud                      �
-�                                                     �
-�  +--------------+  OIDC   +----------------------+ �
-�  �  Web App     �?-------?�  Auth Server         � �
-�  �  (MVC/Razor) �         �  (OpenIddict 5.4)    � �
-�  �  :8080       �         �  :8080               � �
-�  +--------------+         +----------------------+ �
-�         � Bearer JWT                                �
-�         ?                                           �
-�  +--------------+         +----------------------+ �
-�  �  REST API    �?-------?�  PostgreSQL (Fly DB) � �
-�  �  (Web API)   �         �  gym-db              � �
-�  �  :8080       �         +----------------------+ �
-�  +--------------+                                   �
-+-----------------------------------------------------+
++------------------------------------------------------------------+
+|                         Fly.io Cloud (JNB)                       |
+|                                                                   |
+|  +------------------+   OIDC/OAuth2   +----------------------+  |
+|  |   gawdsizwe-web  | --------------> |  gawdsizwe-auth      |  |
+|  |                  |                 |                      |  |
+|  |  ASP.NET Core 9  |                 |  OpenIddict 5.4      |  |
+|  |  MVC + Razor     |                 |  OAuth2 / OIDC       |  |
+|  |  256MB · :8080   |                 |  512MB · :8080       |  |
+|  +--------+---------+                 +----------------------+  |
+|           |                                                       |
+|           |  Bearer JWT                                           |
+|           v                                                       |
+|  +------------------+                 +----------------------+  |
+|  |   gawdsizwe-api  | --------------> |      gym-db          |  |
+|  |                  |                 |                      |  |
+|  |  ASP.NET Core 9  |                 |  PostgreSQL          |  |
+|  |  REST Web API    |                 |  Fly Managed DB      |  |
+|  |  512MB · :8080   |                 |  1GB Storage         |  |
+|  +------------------+                 +----------------------+  |
+|                                                                   |
++------------------------------------------------------------------+
 ```
 
-### Projects
+### Why This Architecture?
 
-| Project | Purpose | Port (local) |
-|---------|---------|-------------|
-| `CarvedRockFitness.Web` | MVC Razor Pages client app | 5001 |
-| `CarvedRockFitness.API` | REST API + business logic | 5002 |
-| `CarvedRockFitness.Auth` | OpenIddict identity server | 5003 |
+| Principle | Implementation |
+|-----------|---------------|
+| **Single Responsibility** | Each service does one job — present, serve, authenticate, or store |
+| **Failure Isolation** | Auth outage does not affect API data serving |
+| **Independent Deployment** | Redeploy any service without touching others |
+| **Zero Shared State** | No shared memory, no shared session — only JWT claims |
+| **Database Ownership** | Only the API holds the DB connection string |
 
----
+### Internal N-Tier Structure (per service)
 
-## ? Features
-
-### Platform Modules
-
-| Module | Route | Role Required |
-|--------|-------|---------------|
-| Home / Feed | `/` | Any authenticated |
-| **Academy** | `/academy` | PaidUser / Admin |
-| Academy Registration | `/academy/register` | PaidUser / Admin |
-| **Suggestions** | `/suggestion/create` | PaidUser / Admin |
-| **Ad Banners** | `/admin` | Admin |
-| **Admin Dashboard** | `/admin` | Admin |
-| **Transport** | `/transport` | PaidUser / Admin |
-| **Ratings** | `/rating` | PaidUser / Admin |
-
-### Security & Auth
-
-- OAuth2 Authorization Code flow with PKCE (OpenIddict 5.4)
-- Role-based access control (`Admin`, `PaidUser`, `FreeUser`)
-- JWT Bearer token validation on API
-- HTTPS enforcement + `ForwardedHeaders` for Fly.io proxy
-- Cookie authentication with sliding expiry on Web
-
-### Infrastructure
-
-- Structured logging with Serilog (console + file)
-- Health check endpoints (`/health`)
-- EF Core with PostgreSQL (Fly Postgres)
-- Fly.io multi-region deployment
-- Docker-based builds via `fly deploy`
+```
+Controller  (HTTP in/out — no business logic)
+    |
+Service Layer  (business rules — no DB knowledge)
+    |
+Repository / EF Core  (data access — no HTTP knowledge)
+    |
+PostgreSQL  (storage — knows nothing about the app)
+```
 
 ---
 
-## ?? Quick Start (Local)
+## Quick Start
 
 ### Prerequisites
 
 - .NET 9 SDK
-- PostgreSQL (or use SQLite by swapping connection string)
+- PostgreSQL (or Docker)
+- Visual Studio 2022 / VS Code
 
-### 1. Clone & Configure
+### Run Locally
 
 ```bash
+# Clone
 git clone https://github.com/GawdSizwe/CarvedRockFitness.git
 cd CarvedRockFitness
-```
 
-### 2. Set User Secrets
-
-```powershell
-# Auth Server
+# Start Auth Server (port 5002)
 cd CarvedRockFitness.Auth
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Database=carvedrock;Username=postgres;Password=yourpassword"
+dotnet run
 
-# API
-cd ..\CarvedRockFitness.API
-dotnet user-secrets set "ConnectionStrings:CarvedRockFitnessDbContextConnection" "Host=localhost;Database=carvedrock;Username=postgres;Password=yourpassword"
+# Start API (port 5001)
+cd ../CarvedRockFitness.API
+dotnet run
+
+# Start Web (port 5000)
+cd ../CarvedRockFitness.Web
+dotnet run
 ```
-
-### 3. Run all three
-
-```powershell
-# Terminal 1 � Auth
-cd CarvedRockFitness.Auth && dotnet run
-
-# Terminal 2 � API
-cd CarvedRockFitness.API && dotnet run
-
-# Terminal 3 � Web
-cd CarvedRockFitness.Web && dotnet run
-```
-
-Navigate to `https://localhost:5001`
 
 ---
 
-## ?? Data Model (Key Entities)
+## Features
 
-| Entity | Description |
-|--------|-------------|
-| `ApplicationUser` | Extended Identity user with `IsPaidUser` flag |
-| `AcademyRegistration` | Fitness class enrolment |
-| `AcademyReview` | Rating/review per class |
-| `Driver` | Transport driver profile |
-| `DriverApplication` | Driver onboarding request |
-| `DriverRating` | Star rating for a trip |
-| `AdBanner` | Admin-managed promotional banners |
-| `Suggestion` | Community improvement suggestion |
+### Platform Modules
+
+| Module | Description | Access |
+|--------|-------------|--------|
+| **Meetups Feed** | Community event listings with pinning and categories | Public |
+| **Suggestions** | Submit and vote on community ideas | Authenticated |
+| **YVEDA Academy** | Sports academy registrations, stats, reviews | Public / Admin |
+| **Transport** | Driver listings, applications, route management | Public / Admin |
+| **Ratings** | Star ratings for drivers and academy | Public |
+| **Admin Dashboard** | Full platform control panel | Admin only |
+| **Ad Banners** | Sponsored banner management | Admin only |
+
+### Security
+
+| Feature | Detail |
+|---------|--------|
+| **OAuth2 / OpenID Connect** | OpenIddict 5.4 — industry-standard token issuance |
+| **JWT Bearer Auth** | Stateless — API validates signature without calling Auth |
+| **Role-Based Access** | `Admin` · `PaidUser` · `FreeUser` enforced per endpoint |
+| **Per-Endpoint Rate Limiting** | 6 sliding window policies — see Observability section |
+| **HTTPS Enforced** | `force_https = true` on all Fly services |
+| **CORS Policy** | Scoped to known Web origin only |
 
 ---
 
-## ?? Testing
+## Deployment
+
+### Fly.io Production Setup
 
 ```bash
-# Run all tests
-dotnet test
-
-# With coverage
-dotnet test --collect:"XPlat Code Coverage"
+# Deploy all three services
+flyctl deploy --app gawdsizwe-api
+flyctl deploy --app gawdsizwe-web
+flyctl deploy --app gawdsizwe-auth
 ```
 
-| Suite | Count | Focus |
-|-------|-------|-------|
-| `UserService` | 7 | CRUD, caching, exceptions |
-| `RoutineService` | 5 | Queries, ownership |
-| `UsersController` | 6 | HTTP responses |
-| `Integration` | 7 | End-to-end |
-| **Total** | **26** | |
+### Environment Secrets
 
----
-
-## ?? Deployment (Fly.io)
-
-### Deploy Commands
-
-```powershell
-$env:PATH += ";$env:USERPROFILE\.fly\bin"
-
-# Auth
-cd CarvedRockFitness.Auth
-flyctl deploy --remote-only --app gawdsizwe-auth --wait-timeout 300
-
+```bash
 # API
-cd ..\CarvedRockFitness.API
-flyctl deploy --remote-only --app gawdsizwe-api --wait-timeout 300
+flyctl secrets set DATABASE_URL="postgres://..." --app gawdsizwe-api
+flyctl secrets set Auth__Authority="https://gawdsizwe-auth.fly.dev" --app gawdsizwe-api
 
 # Web
-cd ..\CarvedRockFitness.Web
-flyctl deploy --remote-only --app gawdsizwe-web --wait-timeout 300
+flyctl secrets set Api__BaseUrl="https://gawdsizwe-api.fly.dev" --app gawdsizwe-web
+flyctl secrets set Auth__Authority="https://gawdsizwe-auth.fly.dev" --app gawdsizwe-web
+
+# Auth
+flyctl secrets set ConnectionStrings__DefaultConnection="postgres://..." --app gawdsizwe-auth
 ```
 
-### Production Secrets
+### Infrastructure
 
-| App | Secret | Value |
-|-----|--------|-------|
-| Auth | `DATABASE_URL` | Fly Postgres URL |
-| Auth | `SIGNING_CERT_PASSWORD` | RSA cert password |
-| API | `DATABASE_URL` | Fly Postgres URL |
-| API | `Auth:Authority` | `https://gawdsizwe-auth.fly.dev` |
-| Web | `OIDC:Authority` | `https://gawdsizwe-auth.fly.dev` |
-| Web | `Api:BaseUrl` | `https://gawdsizwe-api.fly.dev` |
-| Web | `PayFast:MerchantId` | PayFast merchant ID |
-| Web | `PayFast:MerchantKey` | PayFast merchant key |
-
-### Useful Commands
-
-```powershell
-# Logs
-flyctl logs --app gawdsizwe-web
-
-# DB access
-flyctl postgres connect -a gym-db -d <dbname>
-
-# Promote user to Admin
-INSERT INTO "AspNetUserRoles" ("UserId","RoleId")
-SELECT 'USER_ID', "Id" FROM "AspNetRoles" WHERE "Name"='Admin';
-
-# Mark user as PaidUser
-UPDATE "AspNetUsers" SET "IsPaidUser"=true WHERE "Id"='USER_ID';
-```
+| Component | Spec | Region |
+|-----------|------|--------|
+| Web App | 1 shared CPU · 256MB RAM | JNB |
+| REST API | 1 shared CPU · 512MB RAM | JNB |
+| Auth Server | 1 shared CPU · 512MB RAM | JNB |
+| PostgreSQL | Fly Managed DB · 1GB | JNB |
 
 ---
 
-## ?? Known Issues & Fixes
-
-| Issue | Root Cause | Fix |
-|-------|------------|-----|
-| OIDC redirect_uri mismatch | `http://` detected behind Fly proxy | `ForwardedHeaders` middleware + cleared `KnownNetworks` |
-| Token endpoint HTTP method invalid | `UseHttpsRedirection` converted POST?GET | Removed from Auth, rely on proxy |
-| ResponseMode form_post failure | Fly proxy blocks POST callbacks | Changed to `ResponseMode.Query` |
-| API nvarchar migration error | SQL Server migrations on PostgreSQL | `EnsureCreated` + try/catch skip |
-
----
-
-## ?? Tech Stack
-
-| Category | Technology | Version |
-|----------|------------|---------|
-| Runtime | .NET | 9.0 |
-| Language | C# | 13 |
-| Web Framework | ASP.NET Core MVC | 9.0 |
-| Identity | OpenIddict | 5.4 |
-| ORM | EF Core | 9.0 |
-| Database | PostgreSQL | 16 |
-| Logging | Serilog | 8.0 |
-| UI | Bootstrap | 5.3 |
-| Deployment | Fly.io | � |
-
----
-
-## ?? License
-
-MIT License � � 2026 Sizwe Mazibuko
-
----
-
-<div align="center">
-
-**Designed & Developed by Sizwe Mazibuko**
-
-*KasiMeetups / CarvedRock Fitness � Enterprise .NET Demo*
-
-</div>
-
----
-
-## 📡 Observability
+## Observability
 
 ### Health Check Endpoints
 
-| Endpoint | Purpose | Used By |
-|----------|---------|---------|
-| `GET /healthz` | Overall (all checks combined) | Grafana polling |
-| `GET /healthz/live` | Liveness — is the process up? | Fly.io health checks |
-| `GET /healthz/ready` | Readiness — is the DB reachable? | Grafana alerts |
+| Endpoint | Purpose | Checked By |
+|----------|---------|------------|
+| `GET /healthz` | All checks combined | Grafana |
+| `GET /healthz/live` | Liveness — is the process up? | Fly.io (every 30s) |
+| `GET /healthz/ready` | Readiness — is the DB reachable? | Fly.io (every 60s) |
 
-Response format (JSON via HealthChecks.UI):
 ```json
 {
   "status": "Healthy",
@@ -312,43 +212,54 @@ Response format (JSON via HealthChecks.UI):
 }
 ```
 
-### Rate Limiting (Per-Endpoint Sliding Window)
+Fly.io will **automatically restart** any machine that fails a health check — zero manual intervention required.
 
-All policies are **IP-keyed sliding window** — returns `429 Too Many Requests` with `Retry-After: 60` header on breach.
+### Rate Limiting
 
-| Policy | Applied To | Limit |
-|--------|-----------|-------|
-| `general-read` | All GET endpoints (public) | 100 req / 1 min |
-| `admin` | All Admin routes | 30 req / 1 min |
-| `suggestions-write` | `POST /suggestions` | 5 req / 10 min |
-| `ratings-write` | `POST /ratings` | 10 req / 10 min |
-| `academy-register` | `POST /academy/register` | 3 req / 10 min |
-| `drivers-write` | `POST /drivers/apply` | 5 req / 10 min |
+All policies are **IP-keyed sliding window** — returns `429 Too Many Requests` with `Retry-After: 60` on breach.
 
-Rate limit breaches are logged as structured warnings:
+| Policy | Endpoint | Limit | Reason |
+|--------|----------|-------|--------|
+| `general-read` | All public GETs | 100 / 1 min | Prevent scraping |
+| `admin` | All admin routes | 30 / 1 min | Block credential stuffing |
+| `suggestions-write` | `POST /suggestions` | 5 / 10 min | Anti-spam |
+| `ratings-write` | `POST /ratings` | 10 / 10 min | Anti-spam |
+| `academy-register` | `POST /academy/register` | 3 / 10 min | One registration per family |
+| `drivers-write` | `POST /drivers/apply` | 5 / 10 min | Deliberate action only |
+
+Rate limit breaches are logged as structured warnings — queryable in Fly.io log explorer.
+
+### Structured Logging (Serilog)
+
 ```
-[WARN] Rate limit exceeded: POST /academy/register from 196.x.x.x
+[INF] HTTP POST /suggestions responded 201 in 42.3ms
+[WRN] Rate limit exceeded: POST /academy/register from 196.x.x.x
+[ERR] JWT validation failed: token expired
 ```
 
-### Grafana Alerts Setup (Fly.io)
+---
 
-Fly.io includes built-in Grafana. To set up alerts:
+## Release History
 
-1. Open **Grafana** from your Fly.io dashboard nav
-2. Go to **Alerting → Alert Rules → New Rule**
-3. Add two rules:
+| Tag | Description |
+|-----|-------------|
+| `v1.0.0` | OIDC baseline + Fly.io deployment |
+| `v2.0.0` | Academy, Transport, Ratings, Admin, Driver system |
+| `v2.1.0` | Per-endpoint rate limiting + health checks + observability |
 
-**Alert 1 — API Unhealthy**
-- Query: HTTP GET `https://gawdsizwe-api.fly.dev/healthz/ready`
-- Condition: response status != 200 OR body contains `"Unhealthy"`
-- Notify: `smazibuko01@gmail.com`
+---
 
-**Alert 2 — High 429 Rate**
-- Query: `sum(rate(http_requests_total{status="429"}[5m]))`
-- Condition: > 5 per minute
-- Notify: `smazibuko01@gmail.com`
+## Technical Decisions
 
-4. Go to **Dashboards → New Panel** and add:
-   - Panel title: *Request Rate by Endpoint*
-   - Metric: `http_requests_total` grouped by `path`
+| Decision | Choice | Why |
+|----------|--------|-----|
+| Auth framework | OpenIddict 5.4 | Full control, no SaaS dependency, production-grade |
+| ORM | EF Core 9 | Type-safe queries, migration support, EF health probes |
+| Rate limiting | ASP.NET Core built-in | Zero extra dependencies, middleware-level enforcement |
+| Deployment | Fly.io (JNB) | Low latency for SA users, managed PostgreSQL, free tier |
+| Logging | Serilog | Structured output, queryable in production |
+| Token strategy | Stateless JWT | No session affinity — horizontally scalable |
 
+---
+
+_Built for the KasiMeetups community platform — connecting Tembisa and surrounding areas through sport, transport, and culture._
