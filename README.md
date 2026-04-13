@@ -1,42 +1,60 @@
-﻿# KasiMeetups — CarvedRock Fitness Platform
+﻿<div align="center">
 
-[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
-[![C#](https://img.shields.io/badge/C%23-13.0-239120?logo=csharp)](https://learn.microsoft.com/en-us/dotnet/csharp/)
-[![EF Core](https://img.shields.io/badge/EF_Core-9.0-512BD4?logo=dotnet)](https://docs.microsoft.com/ef/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?logo=postgresql)](https://www.postgresql.org)
-[![OpenIddict](https://img.shields.io/badge/OpenIddict-5.4-blueviolet)](https://github.com/openiddict/openiddict-core)
-[![Fly.io](https://img.shields.io/badge/Fly.io-LIVE-8B5CF6)](https://fly.io)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+# KasiMeetups — CarvedRock Fitness Platform
 
-> **Enterprise-grade community platform** built on ASP.NET Core 9 — microservices architecture, OAuth2/OpenID Connect identity, role-based access control, per-endpoint rate limiting, and split health checks. Live in Johannesburg (JNB).
->
-> _Clean Architecture . OAuth2/OIDC . Role-Based Access . Per-Endpoint Rate Limiting . Live on Fly.io_
+### Enterprise-Grade Community Platform
 
-[Live Demo](#live-demo) . [Architecture](#architecture) . [Security](#security-architecture) . [Tech Stack](#technical-stack) . [Quick Start](#quick-start) . [Features](#features) . [Observability](#observability) . [Deployment](#deployment) . [Laws](#the-laws-behind-it)
+[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=for-the-badge&logo=dotnet)](https://dotnet.microsoft.com)
+[![C#](https://img.shields.io/badge/C%23-13.0-239120?style=for-the-badge&logo=csharp)](https://learn.microsoft.com/en-us/dotnet/csharp/)
+[![EF Core](https://img.shields.io/badge/EF_Core-9.0-512BD4?style=for-the-badge&logo=dotnet)](https://docs.microsoft.com/ef/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![OpenIddict](https://img.shields.io/badge/OpenIddict-5.4-blueviolet?style=for-the-badge)](https://github.com/openiddict/openiddict-core)
+[![Fly.io](https://img.shields.io/badge/Fly.io-LIVE-8B5CF6?style=for-the-badge)](https://fly.io)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 ---
 
-## Author
+**Microservices Architecture | OAuth2/OpenID Connect | Role-Based Access Control**
+**Per-Endpoint Rate Limiting | Split Health Probes | Structured Observability**
 
-| | |
-|---|---|
-| **Name** | Sizwe Mazibuko |
-| **Role** | Software Engineer / Tech Lead |
-| **GitHub** | [github.com/GawdSizwe](https://github.com/GawdSizwe) |
-| **Email** | smazibuko01@gmail.com |
+---
+
+*Built on ASP.NET Core 9 -- four independently deployed microservices,*
+*secured by a self-hosted OAuth2 identity server, protected by six per-endpoint*
+*rate limiting policies, monitored by Kubernetes-style health probes,*
+*and deployed to the Johannesburg (JNB) region on Fly.io.*
+
+---
+
+[Live Demo](#live-demo) | [Architecture](#architecture) | [Security](#security-architecture) | [Tech Stack](#technical-stack) | [Quick Start](#quick-start) | [Features](#features) | [Observability](#observability) | [Deployment](#deployment) | [Laws](#the-laws-behind-it)
+
+---
+
+### Built By
+
+**Sizwe Mazibuko** -- Software Engineer / Tech Lead
+
+[![GitHub](https://img.shields.io/badge/GitHub-GawdSizwe-181717?style=for-the-badge&logo=github)](https://github.com/GawdSizwe)
+[![Email](https://img.shields.io/badge/Email-smazibuko01%40gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:smazibuko01@gmail.com)
+
+</div>
 
 ---
 
 ## Live Demo
 
-| Service | URL | Role |
-|---------|-----|------|
-| Web App | https://gawdsizwe-web.fly.dev | MVC Frontend |
-| REST API | https://gawdsizwe-api.fly.dev | Data + Business Logic |
-| Auth Server | https://gawdsizwe-auth.fly.dev | OAuth2 Identity Provider |
-| API Health | https://gawdsizwe-api.fly.dev/healthz | All Health Checks |
-| API Liveness | https://gawdsizwe-api.fly.dev/healthz/live | Process Alive? |
-| API Readiness | https://gawdsizwe-api.fly.dev/healthz/ready | DB Reachable? |
+<div align="center">
+
+| Service | URL | Role | Status |
+|:-------:|:---:|:----:|:------:|
+| **Web App** | [gawdsizwe-web.fly.dev](https://gawdsizwe-web.fly.dev) | MVC Frontend | LIVE |
+| **REST API** | [gawdsizwe-api.fly.dev](https://gawdsizwe-api.fly.dev) | Data + Business Logic | LIVE |
+| **Auth Server** | [gawdsizwe-auth.fly.dev](https://gawdsizwe-auth.fly.dev) | OAuth2 Identity Provider | LIVE |
+| **API Health** | [/healthz](https://gawdsizwe-api.fly.dev/healthz) | All Health Checks | LIVE |
+| **Liveness** | [/healthz/live](https://gawdsizwe-api.fly.dev/healthz/live) | Process Alive? | LIVE |
+| **Readiness** | [/healthz/ready](https://gawdsizwe-api.fly.dev/healthz/ready) | DB Reachable? | LIVE |
+
+</div>
 
 ---
 
@@ -44,7 +62,11 @@
 
 ### Microservices Topology
 
-Four independently deployed services. Zero shared state. All communication via signed JWT tokens.
+<div align="center">
+
+**Four independently deployed services. Zero shared state. All communication via signed JWT tokens.**
+
+</div>
 
 ```
 +------------------------------------------------------------------+
@@ -71,58 +93,65 @@ Four independently deployed services. Zero shared state. All communication via s
 +------------------------------------------------------------------+
 ```
 
+<div align="center">
+
 ### Service Responsibilities
 
 | Service | Single Responsibility | Knows About |
-|---------|----------------------|-------------|
+|:-------:|:--------------------:|:-----------:|
 | **Web** | Render HTML, handle user sessions | Auth + API endpoints only |
 | **API** | Business logic, data access, validation | Database only |
 | **Auth** | Issue and validate tokens | Users + roles only |
 | **Database** | Store data | Nothing else |
 
-> The frontend has never written a SQL query.
-> The database has never seen an HTTP request.
-> The auth server has never heard of meetups.
-> That is separation of concerns enforced at the deployment boundary.
+</div>
+
+> *The frontend has never written a SQL query.*
+> *The database has never seen an HTTP request.*
+> *The auth server has never heard of meetups.*
+> *That is separation of concerns enforced at the deployment boundary.*
 
 ---
 
-### N-Tier Internal Structure (per service)
+### N-Tier Internal Structure
+
+<div align="center">
+
+**Each service follows strict layered architecture -- each tier only talks to the one below it.**
+
+</div>
 
 ```
 +-----------------------------------------------+
-|              Controller Layer                  |
-|   - Receives HTTP requests                    |
-|   - Returns HTTP responses                    |
-|   - Zero business logic                       |
+|              CONTROLLER LAYER                  |
+|   Receives HTTP requests                      |
+|   Returns HTTP responses                      |
+|   Zero business logic                         |
 +------------------------+----------------------+
                          |
                          v
 +-----------------------------------------------+
-|              Service Layer                     |
-|   - Business rules and validation             |
-|   - Orchestration between repositories        |
-|   - No HTTP knowledge, no DB knowledge        |
+|              SERVICE LAYER                     |
+|   Business rules and validation               |
+|   Orchestration between repositories          |
+|   No HTTP knowledge, no DB knowledge          |
 +------------------------+----------------------+
                          |
                          v
 +-----------------------------------------------+
-|           Repository / EF Core 9               |
-|   - Database queries via LINQ                 |
-|   - Entity mapping and migrations             |
-|   - No business logic, no HTTP knowledge      |
+|           REPOSITORY / EF CORE 9               |
+|   Database queries via LINQ                   |
+|   Entity mapping and migrations               |
+|   No business logic, no HTTP knowledge        |
 +------------------------+----------------------+
                          |
                          v
 +-----------------------------------------------+
-|              PostgreSQL (Fly Managed)           |
-|   - Storage only                              |
-|   - Knows nothing about HTTP or business rules|
+|              POSTGRESQL (FLY MANAGED)          |
+|   Storage only                                |
+|   Knows nothing about HTTP or business rules  |
 +-----------------------------------------------+
 ```
-
-> Each tier only talks to the one directly below it.
-> A Controller never writes SQL. The database never knows about HTTP.
 
 ---
 
@@ -132,8 +161,8 @@ Four independently deployed services. Zero shared state. All communication via s
 
 ```
 +----------+        +------------+        +----------+
-|  Client  | -----> |   Auth     | -----> | Returns  |
-| (Browser)|  login |   Server   |  token |   JWT    |
+|  CLIENT  | -----> |    AUTH    | -----> |  RETURNS |
+| (Browser)|  login |   SERVER   |  signs |   JWT    |
 +----------+        +------------+        +----+-----+
                                                |
                                     signed token (1hr TTL)
@@ -157,33 +186,44 @@ Four independently deployed services. Zero shared state. All communication via s
                                 +----------+     +------------+
 ```
 
-> The API validates the JWT signature locally.
-> It never calls the Auth server on every request.
-> That is zero auth latency after token issuance.
+<div align="center">
+
+> **The API validates the JWT signature locally. It never calls the Auth server per request.**
+> **That is zero auth latency after token issuance.**
+
+</div>
 
 ### Role-Based Access Control
 
+<div align="center">
+
 | Role | Access Level | Example Actions |
-|------|-------------|-----------------|
+|:----:|:-----------:|:---------------:|
 | **Admin** | Full platform control | Manage drivers, approve registrations, toggle settings |
 | **PaidUser** | Enhanced features | Submit suggestions, access premium content |
 | **FreeUser** | Public access | View meetups, browse drivers, read reviews |
+
+</div>
 
 ---
 
 ## Technical Stack
 
+<div align="center">
+
 | Technology | Version | Purpose |
-|-----------|---------|---------|
-| ASP.NET Core | 9.0 | Web framework (Web + API + Auth) |
-| C# | 13.0 | Programming language |
-| Entity Framework Core | 9.0 | ORM + database migrations |
-| PostgreSQL | Latest | Primary database (Fly managed) |
-| OpenIddict | 5.4 | OAuth2 / OpenID Connect provider |
-| Serilog | Latest | Structured logging |
-| Redis | Optional | Distributed caching (fallback: in-memory) |
-| Razor Views | Built-in | Server-side UI rendering |
-| Bootstrap | 5.x | Responsive CSS framework |
+|:----------:|:-------:|:-------:|
+| **ASP.NET Core** | 9.0 | Web framework (Web + API + Auth) |
+| **C#** | 13.0 | Programming language |
+| **Entity Framework Core** | 9.0 | ORM + database migrations |
+| **PostgreSQL** | Latest | Primary database (Fly managed) |
+| **OpenIddict** | 5.4 | OAuth2 / OpenID Connect provider |
+| **Serilog** | Latest | Structured logging |
+| **Redis** | Optional | Distributed caching (fallback: in-memory) |
+| **Razor Views** | Built-in | Server-side UI rendering |
+| **Bootstrap** | 5.x | Responsive CSS framework |
+
+</div>
 
 ---
 
@@ -203,16 +243,13 @@ git clone https://github.com/GawdSizwe/CarvedRockFitness.git
 cd CarvedRockFitness
 
 # Start Auth Server (terminal 1)
-cd CarvedRockFitness.Auth
-dotnet run
+cd CarvedRockFitness.Auth && dotnet run
 
 # Start API (terminal 2)
-cd CarvedRockFitness.API
-dotnet run
+cd CarvedRockFitness.API && dotnet run
 
 # Start Web (terminal 3)
-cd CarvedRockFitness.Web
-dotnet run
+cd CarvedRockFitness.Web && dotnet run
 ```
 
 ---
@@ -221,8 +258,10 @@ dotnet run
 
 ### Platform Modules
 
+<div align="center">
+
 | Module | Description | Access |
-|--------|-------------|--------|
+|:------:|:-----------:|:------:|
 | **Community Feed** | Event listings with pinning and categories | Public |
 | **Suggestions** | Submit and vote on community ideas | Authenticated |
 | **YVEDA Academy** | Sports registrations, stats, reviews | Public / Admin |
@@ -231,30 +270,34 @@ dotnet run
 | **Admin Dashboard** | Full platform control panel | Admin only |
 | **Ad Banners** | Sponsored banner management | Admin only |
 
+</div>
+
 ---
 
 ## Observability
 
-### Health Check Endpoints
+### Health Check Architecture
 
 ```
-Fly.io ----> GET /healthz/live  ----> Process alive?  ----> YES / NO
-              (every 30s)
+FLY.IO -----> GET /healthz/live  -----> Process alive?  -----> YES / NO
+               (every 30s)
 
-Fly.io ----> GET /healthz/ready ----> DB reachable?   ----> YES / NO
-              (every 60s)                                      |
-                                                          NO = auto restart
+FLY.IO -----> GET /healthz/ready -----> DB reachable?   -----> YES / NO
+               (every 60s)                                       |
+                                                            NO = AUTO RESTART
 
-Grafana ---> GET /healthz       ----> All checks       ----> JSON response
+GRAFANA ----> GET /healthz       -----> All checks      -----> JSON response
 ```
 
-| Endpoint | Purpose | Checked By |
-|----------|---------|------------|
-| `GET /healthz` | All checks combined | Grafana |
-| `GET /healthz/live` | Liveness -- is the process up? | Fly.io (every 30s) |
-| `GET /healthz/ready` | Readiness -- is the DB reachable? | Fly.io (every 60s) |
+<div align="center">
 
-Response format:
+| Endpoint | Purpose | Checked By | Interval |
+|:--------:|:-------:|:----------:|:--------:|
+| **`/healthz`** | All checks combined | Grafana | On demand |
+| **`/healthz/live`** | Liveness -- process up? | Fly.io | Every 30s |
+| **`/healthz/ready`** | Readiness -- DB reachable? | Fly.io | Every 60s |
+
+</div>
 
 ```json
 {
@@ -267,34 +310,46 @@ Response format:
 }
 ```
 
-> Fly.io will automatically restart any machine that fails a health check.
-> Zero manual intervention required.
+<div align="center">
 
-### Rate Limiting
+> **Fly.io automatically restarts any machine that fails a health check.**
+> **Zero manual intervention required.**
+
+</div>
+
+---
+
+### Rate Limiting Architecture
 
 ```
-Request ----> [Rate Limiter] ----> Allowed? ----> [Controller] ----> Response
-                   |
-                   NO
-                   |
-                   v
-             429 Too Many Requests
-             Retry-After: 60
-             Logged: IP + Path + Method
+REQUEST -----> [RATE LIMITER] -----> Allowed? -----> [CONTROLLER] -----> RESPONSE
+                     |
+                     NO
+                     |
+                     v
+               429 TOO MANY REQUESTS
+               Retry-After: 60
+               Logged: IP + Path + Method
 ```
 
-All policies are **IP-keyed sliding window** -- returns `429 Too Many Requests` with `Retry-After: 60` on breach.
+<div align="center">
 
-| Policy | Endpoint | Limit | Threat |
-|--------|----------|-------|--------|
-| `general-read` | All public GETs | 100 / 1 min | Scraping |
-| `admin` | All admin routes | 30 / 1 min | Credential stuffing |
-| `suggestions-write` | POST /suggestions | 5 / 10 min | Spam |
-| `ratings-write` | POST /ratings | 10 / 10 min | Fake reviews |
-| `academy-register` | POST /academy/register | 3 / 10 min | Bot registrations |
-| `drivers-write` | POST /drivers/apply | 5 / 10 min | Application flooding |
+**IP-keyed sliding window -- returns 429 with Retry-After: 60 on breach.**
 
-### Structured Logging (Serilog)
+| Policy | Endpoint | Limit | Threat Addressed |
+|:------:|:--------:|:-----:|:----------------:|
+| **`general-read`** | All public GETs | 100 / 1 min | Data scraping |
+| **`admin`** | All admin routes | 30 / 1 min | Credential stuffing |
+| **`suggestions-write`** | POST /suggestions | 5 / 10 min | Content spam |
+| **`ratings-write`** | POST /ratings | 10 / 10 min | Fake reviews |
+| **`academy-register`** | POST /academy/register | 3 / 10 min | Bot registrations |
+| **`drivers-write`** | POST /drivers/apply | 5 / 10 min | Application flooding |
+
+</div>
+
+---
+
+### Structured Logging
 
 ```
 [INF] HTTP POST /suggestions responded 201 in 42.3ms
@@ -302,98 +357,122 @@ All policies are **IP-keyed sliding window** -- returns `429 Too Many Requests` 
 [ERR] JWT validation failed: token expired
 ```
 
-> Every log entry is a queryable data point -- not a string.
-> Method, path, status, duration, and client IP are discrete fields.
+<div align="center">
+
+> **Every log entry is a queryable data point -- not a string.**
+> **Method, path, status, duration, and client IP are discrete fields.**
+
+</div>
 
 ---
 
 ## Deployment
 
-### Fly.io Production (JNB Region)
+### Infrastructure
+
+<div align="center">
+
+| Component | Spec | Region | Status |
+|:---------:|:----:|:------:|:------:|
+| **Web App** | 1 shared CPU . 256MB RAM | JNB | Deployed |
+| **REST API** | 1 shared CPU . 512MB RAM | JNB | Deployed |
+| **Auth Server** | 1 shared CPU . 512MB RAM | JNB | Deployed |
+| **PostgreSQL** | Fly Managed DB . 1GB | JNB | Deployed |
+
+</div>
+
+### Deploy Commands
 
 ```bash
-# Deploy each service from its own directory
 cd CarvedRockFitness.API  && flyctl deploy
 cd CarvedRockFitness.Web  && flyctl deploy
 cd CarvedRockFitness.Auth && flyctl deploy
-```
-
-### Infrastructure
-
-| Component | Spec | Region |
-|-----------|------|--------|
-| Web App | 1 shared CPU . 256MB RAM | JNB |
-| REST API | 1 shared CPU . 512MB RAM | JNB |
-| Auth Server | 1 shared CPU . 512MB RAM | JNB |
-| PostgreSQL | Fly Managed DB . 1GB | JNB |
-
-### Environment Secrets
-
-```bash
-flyctl secrets set DATABASE_URL="postgres://..." --app gawdsizwe-api
-flyctl secrets set Auth__Authority="https://gawdsizwe-auth.fly.dev" --app gawdsizwe-api
-flyctl secrets set Api__BaseUrl="https://gawdsizwe-api.fly.dev" --app gawdsizwe-web
 ```
 
 ---
 
 ## The Laws Behind It
 
-Five foundational laws of computer science -- all five enforced at the infrastructure level, not just in code.
+<div align="center">
+
+**Five foundational laws of computer science -- all five enforced at the infrastructure level.**
 
 | Law | Author | Year | How It Is Applied |
-|-----|--------|------|-------------------|
-| **Conway's Law** | Mel Conway | 1967 | 4 service boundaries designed before code -- the architecture mirrors 4 independent teams in 1 developer |
-| **Separation of Concerns** | Edsger Dijkstra | 1974 | The database has never seen HTTP. The frontend has never executed SQL. Hard boundaries, not soft suggestions. |
-| **Principle of Least Privilege** | Jerome Saltzer | 1975 | One service holds the DB connection string. The other three do not know the database exists. |
-| **Fallacies of Distributed Computing** | Peter Deutsch | 1994 | Health probes every 30s. Auto-restart on failure. Designed for the network to lie. |
-| **Single Responsibility Principle** | Robert C. Martin | 2003 | Each service has exactly one reason to change. Auth ships independently of API. API ships independently of Web. |
+|:---:|:------:|:----:|:-----------------:|
+| **Conway's Law** | Mel Conway | 1967 | 4 service boundaries designed before code -- mirrors 4 independent teams |
+| **Separation of Concerns** | Edsger Dijkstra | 1974 | DB never sees HTTP. Frontend never executes SQL. Hard boundaries. |
+| **Least Privilege** | Jerome Saltzer | 1975 | One service holds the DB connection string. Three others don't know it exists. |
+| **Fallacies of Distributed Computing** | Peter Deutsch | 1994 | Health probes every 30s. Auto-restart on failure. Designed for network failure. |
+| **Single Responsibility** | Robert C. Martin | 2003 | Each service has one reason to change. Auth ships independently of API. |
+
+</div>
 
 ---
 
 ## How It Compares
 
+<div align="center">
+
 | Company | Their Architecture | This Platform |
-|---------|-------------------|---------------|
-| **Netflix** | Microservices, JWT, per-service auth, health gates | Same pattern. Different scale. |
-| **Uber** | Service isolation, stateless requests, structured logs | Same pattern. Different scale. |
-| **FNB / Standard Bank** | OAuth2, RBAC, least privilege, audit trail | Same pattern. Same country. |
-| **Seed-Stage Startups** | Monolith, basic JWT, no health checks | Already ahead of most funded companies. |
-| **Bootcamp Graduates** | CRUD, session auth, Heroku, no rate limiting | Three levels below this architecture. |
+|:-------:|:------------------:|:-------------:|
+| **Netflix** | Microservices, JWT, per-service auth, health gates | **Same pattern. Different scale.** |
+| **Uber** | Service isolation, stateless requests, structured logs | **Same pattern. Different scale.** |
+| **FNB / Standard Bank** | OAuth2, RBAC, least privilege, audit trail | **Same pattern. Same country.** |
+| **Seed-Stage Startups** | Monolith, basic JWT, no health checks | **Already ahead.** |
+| **Bootcamp Graduates** | CRUD, session auth, Heroku, no rate limiting | **Three levels behind.** |
+
+</div>
 
 ---
 
 ## Technical Decisions
 
+<div align="center">
+
 | Decision | Choice | Why |
-|----------|--------|-----|
-| Auth framework | OpenIddict 5.4 | Full control, no SaaS dependency, production-grade |
-| ORM | EF Core 9 | Type-safe queries, migration support, health probes |
-| Rate limiting | ASP.NET Core built-in | Zero extra dependencies, middleware-level enforcement |
-| Deployment | Fly.io (JNB) | Low latency for SA users, managed PostgreSQL, free tier |
-| Logging | Serilog | Structured output, queryable in production |
-| Token strategy | Stateless JWT | No session affinity -- horizontally scalable |
-| Health checks | ASP.NET + HealthChecks.UI | JSON responses, split probes, Grafana-compatible |
+|:--------:|:------:|:---:|
+| **Auth** | OpenIddict 5.4 | Full control, no SaaS dependency, production-grade |
+| **ORM** | EF Core 9 | Type-safe queries, migrations, health probes |
+| **Rate Limiting** | ASP.NET Core built-in | Zero extra dependencies, middleware enforcement |
+| **Deployment** | Fly.io (JNB) | Low latency for SA, managed PostgreSQL, free tier |
+| **Logging** | Serilog | Structured output, queryable in production |
+| **Tokens** | Stateless JWT | No session affinity -- horizontally scalable |
+| **Health** | ASP.NET + HealthChecks.UI | JSON responses, split probes, Grafana-ready |
+
+</div>
 
 ---
 
 ## Release History
 
+<div align="center">
+
 | Tag | Description |
-|-----|-------------|
-| `v1.0.0` | OIDC baseline + Fly.io deployment |
-| `v2.0.0` | Academy, Transport, Ratings, Admin, Driver system |
-| `v2.1.0` | Per-endpoint rate limiting + split health checks + observability |
+|:---:|:-----------:|
+| **`v1.0.0`** | OIDC baseline + Fly.io deployment |
+| **`v2.0.0`** | Academy, Transport, Ratings, Admin, Driver system |
+| **`v2.1.0`** | Per-endpoint rate limiting + split health checks + observability |
+
+</div>
 
 ---
 
-> _Five laws. Written between 1967 and 2003._
-> _All five enforced at the infrastructure level._
-> _Not in a textbook. Not in a tutorial._
-> _Running in production. Johannesburg. Right now._
->
-> _One platform. One developer. Tembisa._
+<div align="center">
+
+### Five laws. Written between 1967 and 2003.
+
+### All five enforced at the infrastructure level.
+
+### Not in a textbook. Not in a tutorial.
+
+### Running in production. Johannesburg. Right now.
+
+---
+
+**One platform. One developer. Tembisa.**
 
 ---
 
 _Built for the KasiMeetups community -- connecting Tembisa and surrounding areas through sport, transport, and culture._
+
+</div>
