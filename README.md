@@ -168,30 +168,30 @@ graph TB
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           TECHNOLOGY STACK                               │
+│                           TECHNOLOGY STACK                              │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  📱 PRESENTATION          🔧 BACKEND              💾 DATA                 │
+│                                                                         │
+│  📱 PRESENTATION          🔧 BACKEND              💾 DATA             │
 │  ─────────────────        ────────────          ─────────               │
-│  • ASP.NET Core 9         • ASP.NET Core 9        • PostgreSQL 16        │
-│  • Razor Pages            • OpenIddict 5.4        • Neon Serverless      │
-│  • Bootstrap 5            • MediatR               • Redis 7              │
-│  • OIDC Client            • FluentValidation        • MailKit SMTP        │
-│  • Data Protection        • AutoMapper              • Cloudinary          │
-│                                                                          │
-│  ⚡ INFRASTRUCTURE         🧠 DOMAIN               🔒 SECURITY              │
+│  • ASP.NET Core 9         • ASP.NET Core 9        • PostgreSQL 16       │
+│  • Razor Pages            • OpenIddict 5.4        • Neon Serverless     │
+│  • Bootstrap 5            • MediatR               • Redis 7             │
+│  • OIDC Client            • FluentValidation        • MailKit SMTP      │
+│  • Data Protection        • AutoMapper              • Cloudinary        │
+│                                                                         │
+│  ⚡ INFRASTRUCTURE         🧠 DOMAIN               🔒 SECURITY        │
 │  ─────────────────        ────────────            ───────────           │
-│  • EF Core 9              • Pure C# Classes         • JWT Bearer            │
-│  • Npgsql                 • Domain Events         • RS256 Signing         │
-│  • Dapper (queries)        • Value Objects         • PKCE Flow             │
-│  • Polly (resilience)     • Specification Pattern  • Rate Limiting         │
-│  • Serilog                • CQRS Handlers         • Data Protection       │
-│                                                                          │
-│  ☁️ DEPLOYMENT                                                             │
-│  ─────────────────                                                        │
-│  • Fly.io (JNB Region)      • Docker Containers    • GitHub Actions      │
-│  • Health Checks (live/ready) • Auto-scaling         • Rolling Deploys     │
-│                                                                          │
+│  • EF Core 9              • Pure C# Classes         • JWT Bearer        │
+│  • Npgsql                 • Domain Events         • RS256 Signing       │
+│  • Dapper (queries)        • Value Objects         • PKCE Flow          │
+│  • Polly (resilience)     • Specification Pattern  • Rate Limiting      │
+│  • Serilog                • CQRS Handlers         • Data Protection     │
+│                                                                         │
+│  ☁️ DEPLOYMENT                                                         │
+│  ─────────────────                                                      │
+│  • Fly.io (JNB Region)      • Docker Containers    • GitHub Actions     │
+│  • Health Checks (live/ready) • Auto-scaling         • Rolling Deploys  │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -202,37 +202,37 @@ graph TB
 <div align="center">
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Web App   │────▶│  Auth Svc   │────▶│  Id Server  │
-│  (Browser)    │     │  (OIDC)     │     │  (Tokens)   │
-└─────────────┘     └─────────────┘     └──────┬──────┘
-       │                                         │
-       │         ┌─────────────────────────────┐   │
-       │         │      JWT BEARER TOKEN      │   │
-       │         │  ─────────────────────────  │   │
-       │         │  Header: Authorization       │   │
-       │         │  Payload: User + Roles + Exp │   │
-       │         │  Signature: RS256 Signed     │   │
-       │         └─────────────────────────────┘   │
-       │                                         │
-       │                                         ▼
-       │                              ┌─────────────┐
-       │                              │   API GW    │
-       └─────────────────────────────▶│  (YARP)     │
-                                      │  Validates  │
-                                      └──────┬──────┘
-                                             │
-                                             ▼
-                                      ┌─────────────┐
-                                      │   REST API  │
-                                      │  (Business) │
-                                      └──────┬──────┘
-                                             │
-                                             ▼
-                                      ┌─────────────┐
-                                      │  PostgreSQL │
-                                      │  (Storage)   │
-                                      └─────────────┘
+┌─────────────┐          ┌─────────────┐      ┌─────────────┐
+│   Web App   │────▶    │  Auth Svc    │────▶│  Id Server  │
+│  (Browser)  │          │  (OIDC)     │      │  (Tokens)   │
+└─────────────┘          └─────────────┘      └──────┬──────┘
+       │                                             │
+       │         ┌──────────────────────────────┐    │
+       │         │      JWT BEARER TOKEN        │    │
+       │         │  ────────────────────────────│    │ 
+       │         │  Header: Authorization       │    │
+       │         │  Payload: User + Roles + Exp │    │
+       │         │  Signature: RS256 Signed     │    │
+       │         └──────────────────────────────┘    │
+       │                                             │
+       │                                             ▼
+       │                                      ┌─────────────┐
+       │                                      │   API GW    │
+       └────────────────────────────────────▶│   (YARP)    │
+                                              │  Validates  │
+                                              └──────┬──────┘
+                                                     │
+                                                     ▼
+                                              ┌─────────────┐
+                                              │   REST API  │
+                                              │  (Business) │
+                                              └──────┬──────┘
+                                                     │
+                                                     ▼
+                                              ┌─────────────┐
+                                              │  PostgreSQL │
+                                              │  (Storage)  │
+                                              └─────────────┘
 ```
 
 **All communication is stateless. JWTs carry auth state. No session cookies on API.**
@@ -250,39 +250,39 @@ graph TB
 </div>
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CONTROLLER / API LAYER                        │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐   │
-│  │   ApiController  │  │   HealthCheck   │  │ RateLimitFilter │   │
-│  │  ├─ IActionResult │  │  ├─ /healthz    │  │  ├─ 429 Response │   │
-│  │  ├─ Model Binding │  │  ├─ /live       │  │  ├─ Sliding Window│   │
-│  │  ├─ Zero Logic    │  │  ├─ /ready      │  │  ├─ IP Tracking   │   │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘   │
-├─────────────────────────────────────────────────────────────────┤
-│                    APPLICATION / SERVICE LAYER                 │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐   │
-│  │  CommandHandler  │  │  QueryHandler   │  │  DomainService  │   │
-│  │  ├─ MediatR      │  │  ├─ Dapper      │  │  ├─ BusinessRules│   │
-│  │  ├─ Validation   │  │  ├─ Projection  │  │  ├─ Events       │   │
-│  │  ├─ Events       │  │  ├─ Caching     │  │  ├─ No HTTP      │   │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘   │
-├─────────────────────────────────────────────────────────────────┤
-│                    INFRASTRUCTURE / DATA LAYER                 │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐   │
-│  │  EF Core Repo   │  │   Redis Cache   │  │  Identity Store │   │
-│  │  ├─ UnitOfWork   │  │  ├─ Sessions    │  │  ├─ Users       │   │
-│  │  ├─ Migrations   │  │  ├─ Tokens      │  │  ├─ Roles        │   │
-│  │  ├─ Transactions │  │  ├─ Blacklist   │  │  ├─ Claims       │   │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘   │
-├─────────────────────────────────────────────────────────────────┤
-│                    EXTERNAL SERVICES                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐   │
-│  │  PostgreSQL 16  │  │  SendGrid SMTP  │  │  Cloudinary/S3  │   │
-│  │  ├─ Multi-tenant │  │  ├─ Transactional│  │  ├─ Images       │   │
-│  │  ├─ Row Security │  │  ├─ Bulk        │  │  ├─ CDN          │   │
-│  │  ├─ Encrypted   │  │  ├─ Templates   │  │  ├─ Transform    │   │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                    CONTROLLER / API LAYER                              │
+│  ┌────────────────────┐  ┌─────────────────┐  ┌────────────────────┐   │
+│  │   ApiController    │  │   HealthCheck   │  │ RateLimitFilter    │   │
+│  │  ├─ IActionResult  │  │  ├─ /healthz    │  │  ├─ 429 Response   │   │
+│  │  ├─ Model Binding  │  │  ├─ /live       │  │  ├─ Sliding Window │   │
+│  │  ├─ Zero Logic     │  │  ├─ /ready      │  │  ├─ IP Tracking    │   │
+│  └────────────────────┘  └─────────────────┘  └────────────────────┘   │
+├────────────────────────────────────────────────────────────────────────┤
+│                    APPLICATION / SERVICE LAYER                         │
+│  ┌──────────────────┐  ┌─────────────────┐  ┌───────────────────┐      │
+│  │  CommandHandler  │  │  QueryHandler   │  │  DomainService    │      │
+│  │  ├─ MediatR      │  │  ├─ Dapper      │  │  ├─ BusinessRules │      │
+│  │  ├─ Validation   │  │  ├─ Projection  │  │  ├─ Events        │      │
+│  │  ├─ Events       │  │  ├─ Caching     │  │  ├─ No HTTP       │      │
+│  └──────────────────┘  └─────────────────┘  └───────────────────┘      │
+├────────────────────────────────────────────────────────────────────────┤
+│                    INFRASTRUCTURE / DATA LAYER                         │
+│  ┌──────────────────┐  ┌─────────────────┐  ┌─────────────────┐        │
+│  │  EF Core Repo    │  │   Redis Cache   │  │  Identity Store │        │
+│  │  ├─ UnitOfWork   │  │  ├─ Sessions    │  │  ├─ Users       │        │
+│  │  ├─ Migrations   │  │  ├─ Tokens      │  │  ├─ Roles       │        │
+│  │  ├─ Transactions │  │  ├─ Blacklist   │  │  ├─ Claims      │        │
+│  └──────────────────┘  └─────────────────┘  └─────────────────┘        │
+├────────────────────────────────────────────────────────────────────────┤
+│                    EXTERNAL SERVICES                                   │
+│  ┌──────────────────┐  ┌───────────────────┐  ┌─────────────────┐      │
+│  │  PostgreSQL 16   │  │  SendGrid SMTP    │  │  Cloudinary/S3  │      │
+│  │  ├─ Multi-tenant │  │  ├─ Transactional │  │  ├─ Images      │      │
+│  │  ├─ Row Security │  │  ├─ Bulk          │  │  ├─ CDN         │      │
+│  │  ├─ Encrypted    │  │  ├─ Templates     │  │  ├─ Transform   │      │
+│  └──────────────────┘  └───────────────────┘  └─────────────────┘      │
+└────────────────────────────────────────────────────────────────────────┘ 
 ```
 
 ---
@@ -356,27 +356,27 @@ sequenceDiagram
 <div align="center">
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    JWT BEARER TOKEN (RS256)                       │
-├─────────────────────────────────────────────────────────────────┤
+┌──────────────────────────────────────────────────────────────────┐
+│                    JWT BEARER TOKEN (RS256)                      │
+├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │   HEADER    │  │   PAYLOAD   │  │      SIGNATURE        │  │
-│  │             │  │             │  │                         │  │
-│  │ {           │  │ {           │  │ RS256Sign(              │  │
-│  │   "alg":    │  │   "sub":    │  │   header + payload,     │  │
-│  │   "RS256", │  │   "user123",│  │   private_key           │  │
-│  │   "typ":    │  │   "roles": [│  │ )                       │  │
-│  │   "JWT",   │  │     "Admin" │  │                         │  │
-│  │   "kid":    │  │   ],        │  │ Verifiable via JWKS     │  │
-│  │   "key-1"  │  │   "exp":    │  │ at /.well-known/jwks    │  │
-│  │ }           │  │   1234567890│  │                         │  │
-│  │             │  │ }           │  │                         │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐   │
+│  │   HEADER    │  │   PAYLOAD   │  │      SIGNATURE          │   │
+│  │             │  │             │  │                         │   │
+│  │ {           │  │ {           │  │ RS256Sign(              │   │
+│  │   "alg":    │  │   "sub":    │  │   header + payload,     │   │
+│  │   "RS256",  │  │   "user123",│  │   private_key           │   │
+│  │   "typ":    │  │   "roles": [│  │ )                       │   │
+│  │   "JWT",    │  │     "Admin" │  │                         │   │
+│  │   "kid":    │  │   ],        │  │ Verifiable via JWKS     │   │
+│  │   "key-1"   │  │   "exp":    │  │ at /.well-known/jwks    │   │
+│  │ }           │  │   1234567890│  │                         │   │
+│  │             │  │ }           │  │                         │   │
+│  └─────────────┘  └─────────────┘  └─────────────────────────┘   │
 │                                                                  │
-│  Base64Url encoded → Compact serialization → Authorization header │
+│ Base64Url encoded → Compact serialization → Authorization header │
 │                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 </div>
@@ -410,82 +410,82 @@ sequenceDiagram
 </div>
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                              🔒 EDGE LAYER (Purple)                                       │
+┌───────────────────────────────────────────────────────────────────────────────────────────┐
+│                              🔒 EDGE LAYER 0Purple)                                       │
 │  ┌─────────────────────────────────────────────────────────────────────────────────────┐  │
 │  │  Fly.io Edge · TLS 1.3 Termination · Let's Encrypt · HTTP/2 · WebSocket Support     │  │
 │  └─────────────────────────────────────────────────────────────────────────────────────┘  │
+└───────────────────────────────────────────────────────────────────────────────────────────┘
+                                          │
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                           📱 PRESENTATION LAYER (Blue)                                  │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐    │
+│  │  ASP.NET Core 9  │ │   Razor Pages    │ │   Tailwind CSS   │ │  HTMX / Alpine   │    │
+│  │  ├─ MVC Pattern  │ │ ├─ Server Render │ │  ├─ JIT Compiler │ │  ├─ Interactive  │    │
+│  │  ├─ 256MB RAM    │ │  ├─ _Layout      │ │  ├─ Dark Mode    │ │  ├─ No JS Build  │    │
+│  │  └─ Port 8080    │ │  └─ Components   │ │  └─ Mobile-First │ │  └─ Progressive  │    │
+│  └──────────────────┘ └──────────────────┘ └──────────────────┘ └──────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                           │
                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                           📱 PRESENTATION LAYER (Blue)                                    │
-│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐     │
-│  │  ASP.NET Core 9  │ │   Razor Pages    │ │   Tailwind CSS   │ │  HTMX / Alpine   │     │
-│  │  ├─ MVC Pattern  │ │  ├─ Server Render│ │  ├─ JIT Compiler │ │  ├─ Interactive │     │
-│  │  ├─ 256MB RAM   │ │  ├─ _Layout      │ │  ├─ Dark Mode   │ │  ├─ No JS Build │     │
-│  │  └─ Port 8080   │ │  └─ Components   │ │  └─ Mobile-First│ │  └─ Progressive │     │
-│  └──────────────────┘ └──────────────────┘ └──────────────────┘ └──────────────────┘     │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
-                                          │
-                                          ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                           ⚡ API GATEWAY LAYER (Cyan)                                     │
-│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐     │
-│  │  YARP Reverse    │ │  Rate Limiting   │ │  Health Checks   │ │  Load Balancing  │     │
-│  │  ├─ Proxy        │ │  ├─ 100 req/min │ │  ├─ /live        │ │  ├─ Round Robin │     │
-│  │  ├─ Transform    │ │  ├─ 429 Response │ │  ├─ /ready       │ │  ├─ Auto-scale  │     │
-│  │  └─ Routes       │ │  └─ IP Tracking │ │  └─ JSON Probe   │ │  └─ Failover    │     │
-│  └──────────────────┘ └──────────────────┘ └──────────────────┘ └──────────────────┘     │
+│                           ⚡ API GATEWAY LAYER (Cyan)                                   │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐    │
+│  │  YARP Reverse    │ │  Rate Limiting   │ │  Health Checks   │ │  Load Balancing  │    │
+│  │  ├─ Proxy        │ │  ├─ 100 req/min  │ │  ├─ /live        │ │  ├─ Round Robin  │    │
+│  │  ├─ Transform    │ │  ├─ 429 Response │ │  ├─ /ready       │ │  ├─ Auto-scale   │    │
+│  │  └─ Routes       │ │  └─ IP Tracking  │ │  └─ JSON Probe   │ │  └─ Failover     │    │
+│  └──────────────────┘ └──────────────────┘ └──────────────────┘ └──────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                           │
                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
 │                           🔧 BACKEND SERVICES LAYER (Orange)                            │
-│  ┌──────────────────────────────┐  ┌──────────────────────────────┐                     │
-│  │     🔐 AUTH SERVICE          │  │     🔧 API SERVICE           │                     │
-│  │  ┌────────────────────────┐ │  │  ┌────────────────────────┐  │                     │
-│  │  │ OpenIddict 5.4          │ │  │  │ MediatR 12.0           │  │                     │
-│  │  │ ├─ OIDC Server         │ │  │  │ ├─ CQRS Handlers       │  │                     │
-│  │  │ ├─ OAuth2 + PKCE       │ │  │  │ ├─ Validation Pipeline │  │                     │
-│  │  │ ├─ RS256 Signing       │ │  │  │ ├─ AutoMapper          │  │                     │
-│  │  │ └─ Refresh Tokens      │ │  │  │ └─ FluentValidation    │  │                     │
-│  │  └────────────────────────┘ │  │  └────────────────────────┘  │                     │
-│  │  Port 1632 · 512MB RAM     │  │  Port 1619 · 512MB RAM      │                     │
-│  └──────────────────────────────┘  └──────────────────────────────┘                     │
+│  ┌─────────────────────────── ─┐  ┌──────────────────────────────┐                      │
+│  │     🔐 AUTH SERVICE        │  │     🔧 API SERVICE           │                      │
+│  │  ┌────────────────────────┐ │  │  ┌────────────────────────┐  │                      │
+│  │  │ OpenIddict 5.4         │ │  │  │ MediatR 12.0           │  │                      │
+│  │  │ ├─ OIDC Server         │ │  │  │ ├─ CQRS Handlers       │  │                      │
+│  │  │ ├─ OAuth2 + PKCE       │ │  │  │ ├─ Validation Pipeline │  │                      │
+│  │  │ ├─ RS256 Signing       │ │  │  │ ├─ AutoMapper          │  │                      │
+│  │  │ └─ Refresh Tokens      │ │  │  │ └─ FluentValidation    │  │                      │
+│  │  └────────────────────────┘ │  │  └────────────────────────┘  │                      │
+│  │  Port 1632 · 512MB RAM      │  │  Port 1619 · 512MB RAM       │                      │
+│  └─────────────────────────────┘  └──────────────────────────────┘                      │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                           │
                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                           🔌 INFRASTRUCTURE LAYER (Purple)                                │
-│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐     │
-│  │  EF Core 9       │ │  Redis 7         │ │  ASP.NET Identity│ │  Serilog         │     │
-│  │  ├─ Npgsql       │ │  ├─ Token Store │ │  ├─ User Mgmt   │ │  ├─ Structured  │     │
-│  │  ├─ Migrations   │ │  ├─ Sessions    │ │  ├─ Role Store  │ │  ├─ Seq Output  │     │
-│  │  ├─ UnitOfWork  │ │  ├─ Blacklist   │ │  ├─ Claims      │ │  └─ Console     │     │
-│  │  └─ Dapper (Q)  │ │  └─ Pub/Sub     │ │  └─ PasswordHash│ │                     │     │
-│  └──────────────────┘ └──────────────────┘ └──────────────────┘ └──────────────────┘     │
+│                           🔌 INFRASTRUCTURE LAYER (Purple)                             │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌───────────────────┐ ┌──────────────────┐   │
+│  │  EF Core 9       │ │  Redis 7         │ │  ASP.NET Identity │ │  Serilog         │   │
+│  │  ├─ Npgsql       │ │  ├─ Token Store  │ │  ├─ User Mgmt     │ │  ├─ Structured   │   │
+│  │  ├─ Migrations   │ │  ├─ Sessions     │ │  ├─ Role Store    │ │  ├─ Seq Output   │   │
+│  │  ├─ UnitOfWork   │ │  ├─ Blacklist    │ │  ├─ Claims        │ │  └─ Console      │   │
+│  │  └─ Dapper (Q)   │ │  └─ Pub/Sub      │ │  └─ PasswordHash  │ │                  │   │
+│  └──────────────────┘ └──────────────────┘ └───────────────────┘ └──────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
                                           │
                                           ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                           🧠 DOMAIN CORE LAYER (Green)                                    │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │  Pure C# · Entities · Value Objects · Domain Events · Specifications · CQRS Commands │  │
-│  │  ├─ User Aggregate    ├─ Token Entity    ├─ Role Value Object    ├─ Audit Log   │  │
-│  │  └─ Business Rules    └─ Domain Events   └─ Validation Logic      └─ Contracts   │  │
-│  └─────────────────────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────────────┐
+│                           🧠 DOMAIN CORE LAYER (Green)                                   │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │  Pure C# · Entities · Value Objects · Domain Events · Specifications · CQRS Commands │ │
+│  │  ├─ User Aggregate    ├─ Token Entity    ├─ Role Value Object    ├─ Audit Log        │ │
+│  │  └─ Business Rules    └─ Domain Events   └─ Validation Logic      └─ Contracts       │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────┘ │
+└───────────────────────────────────────────────────────────────────────────────────────────┘
                                           │
                                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                           💾 DATA & EXTERNAL LAYER (Dark Blue)                            │
-│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐     │
-│  │  PostgreSQL 16   │ │  Redis Cluster   │ │  SendGrid        │ │  Cloudinary      │     │
-│  │  ├─ Neon Server  │ │  ├─ Cache        │ │  ├─ SMTP Relay  │ │  ├─ Image CDN   │     │
-│  │  ├─ Row Security │ │  ├─ Pub/Sub    │ │  ├─ Templates   │ │  ├─ Transforms  │     │
-│  │  └─ Encrypted    │ │  └─ Persistence│ │  └─ Bulk Send   │ │  └─ Optimization│     │
-│  └──────────────────┘ └──────────────────┘ └──────────────────┘ └──────────────────┘     │
+│                           💾 DATA & EXTERNAL LAYER (Dark Blue)                         │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐    │
+│  │  PostgreSQL 16   │ │  Redis Cluster   │ │  SendGrid        │ │  Cloudinary      │    │
+│  │  ├─ Neon Server  │ │  ├─ Cache        │ │  ├─ SMTP Relay   │ │  ├─ Image CDN    │    │
+│  │  ├─ Row Security │ │  ├─ Pub/Sub      │ │  ├─ Templates    │ │  ├─ Transforms   │    │
+│  │  └─ Encrypted    │ │  └─ Persistence  │ │  └─ Bulk Send    │ │  └─ Optimization │    │
+│  └──────────────────┘ └──────────────────┘ └──────────────────┘ └──────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1067,7 +1067,7 @@ cd CarvedRockFitness.Auth && flyctl deploy
 | **Rate Limiting** | ASP.NET Core built-in | Zero extra dependencies, middleware enforcement |
 | **Deployment** | Fly.io (JNB) | Low latency for SA, managed PostgreSQL, free tier |
 | **Logging** | Serilog | Structured output, queryable in production |
-| **Tokens** | Stateless JWT | No session affinity -- horizontally scalable |
+| **Tokens** | Stateless JWT | No session affinity -- horizontally scalable |    
 | **Health** | ASP.NET + HealthChecks.UI | JSON responses, split probes, Grafana-ready |
 
 </div>
