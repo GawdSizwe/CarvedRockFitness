@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Enterprise vs Self-Hosted Edge — Capability Matrix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-card: #f1f3f5;
+            --bg-card-hover: #e9ecef;
+            --accent-orange: #c2410c;
+            --accent-green: #15803d;
+            --accent-purple: #6d28d9;
+            --accent-blue: #1d4ed8;
+            --text-primary: #000000;
+            --text-secondary: #1e293b;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --glow-green: rgba(22, 163, 74, 0.08);
+            --glow-orange: rgba(232, 89, 12, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* HERO */
+        .hero {
+            text-align: center;
+            padding: 2.5rem 2rem 1.5rem;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-label {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 0.5rem 1.5rem;
+            border-radius: 100px;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 0.75rem;
+        }
+
+        .hero h1 .orange { color: var(--accent-orange); }
+        .hero h1 .green { color: var(--accent-green); }
+        .hero h1 .vs { color: var(--text-muted); font-weight: 300; font-size: 0.6em; }
+
+        .hero-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 1.5rem;
+            font-weight: 300;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .stat-value.orange { color: var(--accent-orange); }
+        .stat-value.green { color: var(--accent-green); }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-top: 0.15rem;
+        }
+
+        /* DIVIDER */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 1rem 0;
+        }
+
+        /* MATRIX TABLE */
+        .matrix-section {
+            padding: 1rem 0;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent-purple);
+            margin-bottom: 0.75rem;
+        }
+
+        .section-heading {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .matrix-grid {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-primary);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+        }
+
+        .matrix-header {
+            display: grid;
+            grid-template-columns: 160px 1fr 90px 1fr 60px;
+            gap: 0 1rem;
+            background: var(--bg-secondary);
+            padding: 0.6rem 1.5rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-bottom: 2px solid var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .matrix-header .col-orange { color: var(--accent-orange); }
+        .matrix-header .col-green { color: var(--accent-green); }
+        .matrix-header .col-price { text-align: right; }
+
+        .matrix-row {
+            display: grid;
+            grid-template-columns: 160px 1fr 90px 1fr 60px;
+            gap: 0 1rem;
+            background: var(--bg-primary);
+            padding: 0.75rem 1.5rem;
+            align-items: center;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .matrix-row:hover { background: var(--bg-card); }
+
+        .matrix-row .capability {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .matrix-row .detail {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            padding-right: 1rem;
+        }
+
+        .matrix-row .price {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        .price.orange { color: var(--accent-orange); }
+        .price.green { color: var(--accent-green); }
+
+        .matrix-total {
+            display: grid;
+            grid-template-columns: 160px 1fr 90px 1fr 60px;
+            gap: 0 1rem;
+            background: var(--bg-card);
+            padding: 0.6rem 1.5rem;
+            font-weight: 800;
+            border-top: 2px solid var(--accent-purple);
+        }
+
+        .matrix-total .total-label {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .matrix-total .price { font-size: 1rem; }
+
+        /* LAWS SECTION */
+        .laws-section {
+            padding: 1rem 0;
+        }
+
+        .laws-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .law-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .law-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-purple);
+            transform: translateY(-2px);
+        }
+
+        .law-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .law-card:hover::before { opacity: 1; }
+
+        .law-year {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--accent-purple);
+            letter-spacing: 0.15em;
+            margin-bottom: 0.25rem;
+        }
+
+        .law-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 0.15rem;
+        }
+
+        .law-author {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .law-bar {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        /* CLOSING */
+        .closing {
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .closing::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 800px; height: 400px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .closing-quote {
+            font-size: clamp(0.8rem, 1.5vw, 0.95rem);
+            color: var(--text-secondary);
+            max-width: 750px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .closing-quote strong {
+            color: var(--text-primary);
+            font-style: normal;
+        }
+
+        .closing-final {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .closing-final .purple { color: var(--accent-purple); }
+
+        .closing-tag {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+            font-style: italic;
+        }
+
+        /* MESSAGE SECTION */
+        .message {
+            text-align: center;
+            padding: 1.5rem 2rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .message-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .message-text strong {
+            color: var(--text-primary);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .matrix-header, .matrix-row, .matrix-total {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            .matrix-header { display: none; }
+            .matrix-row .capability {
+                color: var(--accent-purple);
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+            }
+            .matrix-row .price { text-align: left; }
+            .hero-stats { gap: 2rem; }
+            .laws-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-label">Capability Matrix</div>
+        <h1>
+            <span class="orange">AWS Enterprise</span>
+            <span class="vs"> vs </span>
+            <span class="green">Self-Hosted Edge</span>
+        </h1>
+        <p class="hero-sub">
+            Same architectural pattern. Same protocol stack. Same five laws.
+            One side rents it from Amazon. The other side built it into the application.
+        </p>
+        <div class="hero-stats">
+            <div class="stat">
+                <div class="stat-value orange">$54,000</div>
+                <div class="stat-label">AWS / Azure per Month</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value green">$0</div>
+                <div class="stat-label">Self-Hosted Monthly</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" style="color: var(--accent-purple);">5</div>
+                <div class="stat-label">Laws Enforced</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" style="color: var(--accent-blue);">1</div>
+                <div class="stat-label">Developer</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container"><div class="divider"></div></div>
+
+    <!-- MATRIX -->
+    <section class="matrix-section container">
+        <div class="section-title">Infrastructure Comparison</div>
+        <h2 class="section-heading">The Capability Matrix</h2>
+
+        <div class="matrix-grid">
+            <div class="matrix-header">
+                <span>Capability</span>
+                <span class="col-orange">AWS / Azure Enterprise</span>
+                <span class="col-orange col-price">$/mo</span>
+                <span class="col-green">Self-Hosted Edge Compute</span>
+                <span class="col-green col-price">$/mo</span>
+            </div>
+
+            <div class="matrix-row">
+                <span class="capability">Identity & Token Issuance</span>
+                <span class="detail">AWS Cognito / Azure AD / Auth0 SaaS</span>
+                <span class="price orange">$6,000/mo</span>
+                <span class="detail">Self-hosted OIDC provider — RS256 signed stateless bearer tokens, zero vendor lock-in</span>
+                <span class="price green">$0</span>
+            </div>
+
+            <div class="matrix-row">
+                <span class="capability">API Threat Mitigation</span>
+                <span class="detail">AWS WAF / Azure API Management (managed rules)</span>
+                <span class="price orange">$4,000/mo</span>
+                <span class="detail">Application-layer rate enforcement — six sliding window policies bound at the middleware pipeline</span>
+                <span class="price green">$0</span>
+            </div>
+
+            <div class="matrix-row">
+                <span class="capability">Infrastructure Health Gating</span>
+                <span class="detail">Datadog / New Relic / Dynatrace (agent-based)</span>
+                <span class="price orange">$5,000/mo</span>
+                <span class="detail">Native split-probe architecture — liveness and readiness separated with EF Core DbContext health gates</span>
+                <span class="price green">$0</span>
+            </div>
+
+            <div class="matrix-row">
+                <span class="capability">Observability Pipeline</span>
+                <span class="detail">Splunk / ELK / CloudWatch Insights</span>
+                <span class="price orange">$5,000/mo</span>
+                <span class="detail">Embedded structured telemetry — Serilog with discrete queryable fields, zero external agents</span>
+                <span class="price green">$0</span>
+            </div>
+
+            <div class="matrix-row">
+                <span class="capability">Container Orchestration</span>
+                <span class="detail">AWS EKS / Azure AKS (managed Kubernetes)</span>
+                <span class="price orange">$15,000/mo</span>
+                <span class="detail">Region-pinned bare-metal micro-VMs — automatic health-gated machine replacement on the network edge</span>
+                <span class="price green">$0</span>
+            </div>
+
+            <div class="matrix-row">
+                <span class="capability">Managed Persistence</span>
+                <span class="detail">AWS RDS Multi-AZ / Azure SQL Geo-Replicated</span>
+                <span class="price orange">$8,000/mo</span>
+                <span class="detail">Managed PostgreSQL — encrypted at rest, private network attachment, single-region optimised</span>
+                <span class="price green">$0</span>
+            </div>
+
+            <div class="matrix-row">
+                <span class="capability">Traffic Ingress & TLS</span>
+                <span class="detail">AWS ALB / Azure Front Door / CloudFlare Pro</span>
+                <span class="price orange">$3,000/mo</span>
+                <span class="detail">Anycast edge routing — automatic TLS termination, zero-config certificate provisioning</span>
+                <span class="price green">$0</span>
+            </div>
+
+            <div class="matrix-row">
+                <span class="capability">Platform Engineering</span>
+                <span class="detail">Dedicated DevOps / SRE (on-call rotation)</span>
+                <span class="price orange">$8,000/mo</span>
+                <span class="detail">Single-operator declarative infrastructure — machine configuration defined as code, deployed to the edge</span>
+                <span class="price green">$0</span>
+            </div>
+
+            <div class="matrix-total">
+                <span class="total-label">Total</span>
+                <span></span>
+                <span class="price orange">$54,000/mo</span>
+                <span></span>
+                <span class="price green">$0</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- MESSAGE -->
+    <section class="message">
+        <p class="message-text">
+            The cost difference is not the point.<br>
+            The point is <strong>what enforces the architecture when no one is watching.</strong><br><br>
+            Amazon sells you the tools. The laws tell you how to use them.<br>
+            Without the laws, $54k buys you an expensive monolith.<br>
+            With the laws, $0 builds you a platform.
+        </p>
+    </section>
+
+    <!-- LAWS -->
+    <section class="laws-section container">
+        <div class="section-title">Foundational Principles</div>
+        <h2 class="section-heading">The Five Laws — Bar for Bar</h2>
+
+        <div class="laws-grid">
+            <div class="law-card">
+                <div class="law-year">1967</div>
+                <div class="law-name">Conway's Law</div>
+                <div class="law-author">Mel Conway</div>
+                <div class="law-bar">"Read the boundaries before writing the code. Four services. Four teams. One developer designed it that way."</div>
+            </div>
+
+            <div class="law-card">
+                <div class="law-year">1974</div>
+                <div class="law-name">Separation of Concerns</div>
+                <div class="law-author">Edsger Dijkstra</div>
+                <div class="law-bar">"Kept every concern in isolation. No crossover. No shortcuts. The database has never seen HTTP."</div>
+            </div>
+
+            <div class="law-card">
+                <div class="law-year">1975</div>
+                <div class="law-name">Principle of Least Privilege</div>
+                <div class="law-author">Jerome Saltzer</div>
+                <div class="law-bar">"Locked the vault. One key. One service. The other three don't know the database exists."</div>
+            </div>
+
+            <div class="law-card">
+                <div class="law-year">1994</div>
+                <div class="law-name">Fallacies of Distributed Computing</div>
+                <div class="law-author">Peter Deutsch</div>
+                <div class="law-bar">"The network lies. So I built probes every 30 seconds that catch it before the user does."</div>
+            </div>
+
+            <div class="law-card">
+                <div class="law-year">2003</div>
+                <div class="law-name">Single Responsibility Principle</div>
+                <div class="law-author">Robert C. Martin</div>
+                <div class="law-bar">"One job each. Auth ships alone. API ships alone. Web ships alone. Change one — touch nothing else."</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container"><div class="divider"></div></div>
+
+    <!-- CLOSING -->
+    <section class="closing">
+        <p class="closing-quote">
+            Conway read the boards and drew four boundaries.<br>
+            Dijkstra kept them isolated — no service crosses the line.<br>
+            Saltzer locked the vault — one key, one door, least privilege.<br>
+            Deutsch said the network lies — so I built probes that don't.<br>
+            Martin said one job each — so each service ships alone.<br><br>
+            <strong>Same matrix. Same protocols. Same laws.</strong><br>
+            Their bill: $54k. Their team: 200+.<br>
+            Mine: $0. One developer. <strong>Tembisa.</strong>
+        </p>
+        <div class="closing-final">
+            Same capability matrix. <span class="purple">Different discipline.</span>
+        </div>
+        <p class="closing-tag">
+            Built for the KasiMeetups community — Tembisa, Ekurhuleni.
+        </p>
+    </section>
+
+</body>
+</html>
