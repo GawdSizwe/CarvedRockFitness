@@ -1,24 +1,35 @@
 using CarvedRockFitness.API.Controllers;
+using CarvedRockFitness.API.DbContexts;
 using CarvedRockFitness.API.DTOs;
 using CarvedRockFitness.API.Exceptions;
 using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace CarvedRockFitness.API.Tests.Controllers;
 
-public class UsersControllerTests
+public class UsersControllerTests : IDisposable
 {
     private readonly Mock<IUserService> _userServiceMock;
     private readonly Mock<ILogger<UsersController>> _loggerMock;
+    private readonly CarvedRockFitnessDbContext _db;
     private readonly UsersController _sut;
 
     public UsersControllerTests()
     {
         _userServiceMock = new Mock<IUserService>();
         _loggerMock = new Mock<ILogger<UsersController>>();
-        _sut = new UsersController(_userServiceMock.Object, _loggerMock.Object);
+
+        var options = new DbContextOptionsBuilder<CarvedRockFitnessDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        _db = new CarvedRockFitnessDbContext(options);
+
+        _sut = new UsersController(_userServiceMock.Object, _loggerMock.Object, _db);
     }
+
+    public void Dispose() => _db.Dispose();
 
     [Fact]
     public async Task GetUsers_ReturnsOkWithUsers()

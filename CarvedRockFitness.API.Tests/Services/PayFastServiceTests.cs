@@ -30,7 +30,7 @@ internal class TestPayFastService(IConfiguration config)
             ["name_last"]        = lastName,
             ["email_address"]    = email,
             ["m_payment_id"]     = paymentId,
-            ["amount"]           = amount.ToString("F2"),
+            ["amount"]           = amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
             ["item_name"]        = itemName,
             ["item_description"] = itemDescription,
         };

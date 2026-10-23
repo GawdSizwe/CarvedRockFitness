@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace CarvedRockFitness.API.Controllers;
 
@@ -182,13 +183,23 @@ public class DriversController(
 }
 
 public record DriverApplyRequest(
-    string FullName, string Phone, string Email, string PreferredRoute,
-    string? Vehicle = null, int Capacity = 7,
-    bool HasPoliceClearance = false, string? LicenseNumber = null, string? Notes = null);
+    [property: Required, StringLength(150, MinimumLength = 1)] string FullName,
+    [property: Required, Phone, StringLength(40)] string Phone,
+    [property: Required, EmailAddress, StringLength(254)] string Email,
+    [property: Required, StringLength(150)] string PreferredRoute,
+    [property: StringLength(150)] string? Vehicle = null,
+    [property: Range(1, 100)] int Capacity = 7,
+    bool HasPoliceClearance = false,
+    [property: StringLength(60)] string? LicenseNumber = null,
+    [property: StringLength(2000)] string? Notes = null);
 
-public record UpdateDriverStatusRequest(string Status);
+public record UpdateDriverStatusRequest([property: Required, StringLength(40)] string Status);
 
 public record CreateDriverRequest(
-    string FullName, string Phone, string Route,
-    string? Vehicle = null, int Capacity = 7,
-    bool PoliceClearance = false, string? LicenseNumber = null);
+    [property: Required, StringLength(150, MinimumLength = 1)] string FullName,
+    [property: Required, Phone, StringLength(40)] string Phone,
+    [property: Required, StringLength(150)] string Route,
+    [property: StringLength(150)] string? Vehicle = null,
+    [property: Range(1, 100)] int Capacity = 7,
+    bool PoliceClearance = false,
+    [property: StringLength(60)] string? LicenseNumber = null);

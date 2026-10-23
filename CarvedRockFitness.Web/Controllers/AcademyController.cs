@@ -1,5 +1,6 @@
 using CarvedRockFitness.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace CarvedRockFitness.Web.Controllers;
 
@@ -26,7 +27,7 @@ public class AcademyController(ApiService apiService) : Controller
 
         var dto = new AcademyRegisterDto(
             model.PlayerName, model.Age, model.Sport,
-            model.ParentName, model.ParentEmail, model.ParentPhone,
+            model.ParentName, model.ParentEmail, model.ParentPhone, model.ConsentGiven,
             model.NeedsTransport, model.PickupAddress, model.Notes);
 
         var (ok, message) = await apiService.RegisterAcademyPlayerAsync(dto);
@@ -51,4 +52,7 @@ public class AcademyRegisterRequest
     public bool   NeedsTransport         { get; set; }
     public string? PickupAddress         { get; set; }
     public string? Notes                 { get; set; }
+
+    [Range(typeof(bool), "true", "true", ErrorMessage = "You must consent to the processing of your and your child's information to register.")]
+    public bool ConsentGiven             { get; set; }
 }

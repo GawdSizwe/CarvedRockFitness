@@ -1,6 +1,7 @@
 using CarvedRockFitness.Auth.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.ComponentModel.DataAnnotations;
 
 namespace CarvedRockFitness.Auth.Controllers;
@@ -17,6 +18,7 @@ public class AccountController(
     }
 
     [HttpPost]
+    [EnableRateLimiting("auth-write")]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
@@ -25,9 +27,14 @@ public class AccountController(
             var user = await userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
-                var result = await signInManager.PasswordSignInAsync(user.UserName!, model.Password, false, false);
+                var result = await signInManager.PasswordSignInAsync(user.UserName!, model.Password, isPersistent: false, lockoutOnFailure: true);
                 if (result.Succeeded)
                     return RedirectToLocal(returnUrl);
+                if (result.IsLockedOut)
+                {
+                    ModelState.AddModelError("", "This account has been temporarily locked due to repeated failed sign-in attempts. Please try again later.");
+                    return View(model);
+                }
             }
             ModelState.AddModelError("", "Invalid email or password.");
         }

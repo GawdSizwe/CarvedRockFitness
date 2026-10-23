@@ -4,12 +4,16 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
 
 namespace CarvedRockFitness.Auth.Controllers;
 
+// OIDC protocol endpoints — these are token/authorize calls from client apps, not browser
+// form posts, so antiforgery validation can't apply (no way for a client to supply a token).
+[IgnoreAntiforgeryToken]
 public class AuthorizationController(
     IOpenIddictApplicationManager applicationManager,
     UserManager<ApplicationUser> userManager,
@@ -54,6 +58,7 @@ public class AuthorizationController(
     }
 
     [HttpPost("~/connect/token")]
+    [EnableRateLimiting("auth-write")]
     public async Task<IActionResult> Exchange()
     {
         var request = HttpContext.GetOpenIddictServerRequest()

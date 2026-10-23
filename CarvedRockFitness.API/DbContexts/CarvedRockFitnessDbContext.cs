@@ -19,12 +19,7 @@ public class CarvedRockFitnessDbContext(DbContextOptions<CarvedRockFitnessDbCont
     public DbSet<DriverApplication> DriverApplications { get; set; }
     public DbSet<DriverRating> DriverRatings { get; set; }
     public DbSet<AcademyReview> AcademyReviews { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.ConfigureWarnings(w =>
-            w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-    }
+    public DbSet<AppSetting> AppSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

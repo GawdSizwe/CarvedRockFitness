@@ -22,12 +22,14 @@ public class RoutinesController(IRoutineService routineService, ILogger<Routines
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The routine details including trainee and trainer information</returns>
     [HttpGet("{id:int}")]
+    // "MustOwnRoutineOrTrainOwner" already covers owner-or-trainer (EitherRequirementRequirement);
+    // do not also stack [MustTrainRoutineOwner] here — combined with AND semantics it would
+    // block plain (non-trainer) owners from viewing their own routine.
     [Authorize(Policy = PolicyMetadata.MustOwnRoutineOrTrainOwner)]
     //[ProducesResponseType(typeof(RoutineDto), StatusCodes.Status200OK)]
     //[ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
     //[ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [MustTrainRoutineOwner("Trainer", "Trainee")]
     public async Task<ActionResult<RoutineDto>> GetRoutineById(int id, CancellationToken cancellationToken)
     {
         logger.LogDebug("Getting routine {RoutineId}", id);

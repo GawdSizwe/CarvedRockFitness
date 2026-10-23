@@ -6,10 +6,15 @@ primary_region = "jnb"
 
 [env]
   ASPNETCORE_ENVIRONMENT = "Production"
+  Web__DataProtectionKeysPath = "/app/keys"
 
 [[mounts]]
   source = "gym_web_uploads"
   destination = "/app/wwwroot/uploads"
+
+[[mounts]]
+  source = "web_keys"
+  destination = "/app/keys"
 
 [http_service]
   internal_port = 8080

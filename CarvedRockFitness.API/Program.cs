@@ -43,6 +43,16 @@ try
         DemoSuggestionsVisible = builder.Configuration.GetValue("SeedData:DemoSuggestionsVisible", false)
     });
 
+    // Resolves the Postgres SSL mode from DB_SSL_MODE (or Database:SslMode config), defaulting to
+    // "Prefer" — i.e. encrypt when the server supports it, rather than always disabling TLS.
+    static Npgsql.SslMode ResolveSslMode(IConfiguration configuration)
+    {
+        var raw = Environment.GetEnvironmentVariable("DB_SSL_MODE") ?? configuration["Database:SslMode"];
+        return !string.IsNullOrEmpty(raw) && Enum.TryParse<Npgsql.SslMode>(raw, true, out var parsed)
+            ? parsed
+            : Npgsql.SslMode.Prefer;
+    }
+
     var pgConn = Environment.GetEnvironmentVariable("DATABASE_URL");
     builder.Services.AddDbContext<CarvedRockFitnessDbContext>(
         dbContextOptions =>
@@ -58,14 +68,12 @@ try
                     Username = userInfo[0],
                     Password = userInfo.Length > 1 ? userInfo[1] : "",
                     Database = uri.AbsolutePath.TrimStart('/'),
-                    SslMode = Npgsql.SslMode.Disable
+                    SslMode = ResolveSslMode(builder.Configuration)
                 };
                 dbContextOptions.UseNpgsql(npgsql.ToString());
             }
             else
                 dbContextOptions.UseSqlServer(builder.Configuration["ConnectionStrings:CarvedRockFitnessDB"]);
-            dbContextOptions.ConfigureWarnings(w =>
-                w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
     // Distributed cache — memory for dev, Redis for production (set Cache:Redis in config)
@@ -108,8 +116,22 @@ try
     // Per-endpoint rate limiting — sliding window, IP-keyed, with Retry-After + structured logging
     builder.Services.AddRateLimiter(options =>
     {
+        // "Fly-Client-IP" is set by the Fly.io edge proxy to the real end-user IP and cannot be
+        // spoofed by callers; the Web app forwards the same header when it proxies requests here,
+        // so limits apply per end user even though every Web-originated call shares one connection.
         static string GetIp(HttpContext ctx) =>
-            ctx.Connection.RemoteIpAddress?.ToString() ?? "anon";
+            ctx.Request.Headers["Fly-Client-IP"].FirstOrDefault()
+            ?? ctx.Connection.RemoteIpAddress?.ToString()
+            ?? "anon";
+
+        // For authenticated write actions, key on the user's subject claim too so one logged-in
+        // user can't bypass the IP-based limit by rotating IPs (and so shared-IP users aren't
+        // penalized by someone else's writes).
+        static string GetUserOrIp(HttpContext ctx)
+        {
+            var sub = ctx.User.FindFirst("sub")?.Value;
+            return !string.IsNullOrEmpty(sub) ? $"user:{sub}" : $"ip:{GetIp(ctx)}";
+        }
 
         // General reads — 100 req/min per IP
         options.AddPolicy("general-read", context => RateLimitPartition.GetSlidingWindowLimiter(
@@ -120,18 +142,18 @@ try
                 SegmentsPerWindow = 6, QueueLimit = 0
             }));
 
-        // Admin endpoints — 30 req/min per IP
+        // Admin endpoints — 30 req/min per authenticated admin
         options.AddPolicy("admin", context => RateLimitPartition.GetSlidingWindowLimiter(
-            GetIp(context),
+            GetUserOrIp(context),
             _ => new SlidingWindowRateLimiterOptions
             {
                 PermitLimit = 30, Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6, QueueLimit = 0
             }));
 
-        // Suggestions POST — 5 per 10 min per IP
+        // Suggestions POST — 5 per 10 min per authenticated user
         options.AddPolicy("suggestions-write", context => RateLimitPartition.GetSlidingWindowLimiter(
-            GetIp(context),
+            GetUserOrIp(context),
             _ => new SlidingWindowRateLimiterOptions
             {
                 PermitLimit = 5, Window = TimeSpan.FromMinutes(10),
@@ -174,7 +196,7 @@ try
             Log.Warning("Rate limit exceeded: {Method} {Path} from {IP}",
                 context.HttpContext.Request.Method,
                 context.HttpContext.Request.Path,
-                context.HttpContext.Connection.RemoteIpAddress);
+                GetIp(context.HttpContext));
         };
     });
 
@@ -232,10 +254,21 @@ try
 
     var app = builder.Build();
 
-    // Auto-apply schema changes on startup (PostgreSQL)
+    // Auto-apply schema changes on startup (PostgreSQL only — this raw SQL uses Postgres syntax
+    // and is skipped for SQL Server/LocalDB and the InMemory provider used by integration tests;
+    // those rely on the EF Core migrations in Migrations/ instead, applied via `dotnet ef database update`).
+    if (!string.IsNullOrEmpty(pgConn))
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<CarvedRockFitnessDbContext>();
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS "AppSettings" (
+                "Key"       TEXT PRIMARY KEY,
+                "Value"     TEXT NOT NULL,
+                "UpdatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            );
+            """);
+
         db.Database.ExecuteSqlRaw("""
             CREATE TABLE IF NOT EXISTS "AcademyRegistrations" (
                 "Id"             SERIAL PRIMARY KEY,
@@ -256,8 +289,10 @@ try
             """);
 
         // Seed academy demo data if table is empty
+        // Demo/seed data is for local development and sandbox demos only — never seeded in
+        // Staging/Production, where real registrations, drivers etc. should be entered by admins.
         var count = db.AcademyRegistrations.Count();
-        if (count == 0)
+        if (count == 0 && app.Environment.IsDevelopment())
         {
             db.Database.ExecuteSqlRaw("""
                 INSERT INTO "AcademyRegistrations" ("PlayerName","Age","Sport","ParentName","ParentEmail","ParentPhone","NeedsTransport","PickupAddress","Status","AssignedRoute","IsDemoData","CreatedAt") VALUES
@@ -312,7 +347,7 @@ try
             """);
 
         // Seed demo drivers if empty
-        if (!db.Drivers.Any())
+        if (!db.Drivers.Any() && app.Environment.IsDevelopment())
         {
             db.Database.ExecuteSqlRaw("""
                 INSERT INTO "Drivers" ("FullName","Phone","Route","Vehicle","Capacity","PoliceClearance","LicenseNumber","Status","IsDemoData","CreatedAt") VALUES
@@ -353,7 +388,7 @@ try
             """);
 
         // Seed demo driver ratings (referencing driver IDs 1–6)
-        if (!db.DriverRatings.Any())
+        if (!db.DriverRatings.Any() && app.Environment.IsDevelopment())
         {
             db.Database.ExecuteSqlRaw("""
                 INSERT INTO "DriverRatings" ("DriverId","ReviewerName","Stars","Comment","IsDemoData","CreatedAt") VALUES
@@ -373,7 +408,7 @@ try
         }
 
         // Seed demo academy reviews
-        if (!db.AcademyReviews.Any())
+        if (!db.AcademyReviews.Any() && app.Environment.IsDevelopment())
         {
             db.Database.ExecuteSqlRaw("""
                 INSERT INTO "AcademyReviews" ("ReviewerName","ReviewerRole","Stars","Comment","Approved","IsDemoData","CreatedAt") VALUES
@@ -389,18 +424,33 @@ try
         }
     }
 
+    // Load the persisted demo-visibility toggle (if any) so it survives restarts/redeploys;
+    // falls back to the appsettings-configured default when no row exists or the table isn't
+    // present yet (e.g. local SQL Server dev before running the AddAppSettings migration).
+    using (var scope = app.Services.CreateScope())
+    {
+        var settings = scope.ServiceProvider.GetRequiredService<RuntimeSettingsService>();
+        var store = scope.ServiceProvider.GetRequiredService<AppSettingsStore>();
+        var persisted = await store.TryGetBoolAsync(RuntimeSettingsService.DemoSuggestionsVisibleKey);
+        if (persisted.HasValue)
+            settings.DemoSuggestionsVisible = persisted.Value;
+    }
+
     // Configure the HTTP request pipeline
 
     // Global exception handling - must be first
     app.UseGlobalExceptionHandler();
 
-    // Swagger UI at root
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+    // Swagger UI at root — only in Development, or when explicitly opted into via config
+    if (app.Environment.IsDevelopment() || builder.Configuration.GetValue("Swagger:Enabled", false))
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "CarvedRock Fitness API v1");
-        options.RoutePrefix = string.Empty;
-    });
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "CarvedRock Fitness API v1");
+            options.RoutePrefix = string.Empty;
+        });
+    }
 
     app.UseCors("WebPolicy");
 

@@ -9,9 +9,10 @@ public class AccountController : Controller
 {
     public IActionResult Login(string? returnUrl = null)
     {
+        var safeReturnUrl = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : "/";
         return Challenge(new AuthenticationProperties
         {
-            RedirectUri = returnUrl ?? "/"
+            RedirectUri = safeReturnUrl
         }, OpenIdConnectDefaults.AuthenticationScheme);
     }
 

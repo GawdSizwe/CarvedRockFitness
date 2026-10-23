@@ -11,14 +11,14 @@ public class EitherRequirementHandler(IServiceProvider serviceProvider) : Author
         var authorizationService = _serviceProvider.GetRequiredService<IAuthorizationService>();
 
         var firstRequirementResult = await authorizationService.AuthorizeAsync(context.User, context.Resource, [requirement.FirstRequirement]);
-        if (firstRequirementResult != null) 
+        if (firstRequirementResult.Succeeded)
         {
             context.Succeed(requirement);
             return;
         }
 
         var secondRequirementResult = await authorizationService.AuthorizeAsync(context.User, context.Resource, [requirement.SecondRequirement]);
-        if (secondRequirementResult != null)
+        if (secondRequirementResult.Succeeded)
         {
             context.Succeed(requirement);
             return;

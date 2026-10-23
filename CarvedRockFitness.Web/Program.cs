@@ -2,13 +2,29 @@ using CarvedRockFitness.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+// Persist Data Protection keys to a durable volume outside Development so cookies/antiforgery
+// tokens survive restarts and redeploys instead of invalidating every user's session each time
+// (see fly.toml: the "web_keys" volume is mounted at Web:DataProtectionKeysPath).
+var keysPath = builder.Configuration["Web:DataProtectionKeysPath"];
+if (!builder.Environment.IsDevelopment() && !string.IsNullOrEmpty(keysPath))
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+        .SetApplicationName("CarvedRockFitness.Web");
+}
+
+builder.Services.AddControllersWithViews(options =>
+{
+    // Require a valid antiforgery token on every unsafe (POST/PUT/DELETE) request by default
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
+}).AddRazorRuntimeCompilation();
 
 // Cookie + OIDC authentication
 builder.Services.AddAuthentication(options =>
@@ -116,7 +132,27 @@ app.UseForwardedHeaders(forwardedOptions);
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
+
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; " +
+        "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net fonts.googleapis.com unpkg.com; " +
+        "font-src 'self' cdn.jsdelivr.net fonts.gstatic.com; " +
+        "img-src 'self' data: *.tile.openstreetmap.org; " +
+        "connect-src 'self' nominatim.openstreetmap.org; " +
+        "frame-ancestors 'none'";
+    await next();
+});
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();

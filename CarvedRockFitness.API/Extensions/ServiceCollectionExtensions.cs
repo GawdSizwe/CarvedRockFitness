@@ -15,6 +15,7 @@ public static class ServiceCollectionExtensions
         // Services
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoutineService, RoutineService>();
+        services.AddScoped<AppSettingsStore>();
 
         // Caching
         services.AddMemoryCache();

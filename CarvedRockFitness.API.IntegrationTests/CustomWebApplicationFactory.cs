@@ -1,4 +1,5 @@
 using CarvedRockFitness.API.DbContexts;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -36,6 +37,13 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             {
                 options.UseInMemoryDatabase(_databaseName);
             });
+
+            // Register a fake authentication scheme that authenticates every request as an
+            // Admin, and make it the default (overriding Program.cs's "Bearer" JWT scheme), so
+            // tests can exercise [Authorize(Roles = "Admin")] endpoints without a real
+            // OpenIddict-issued token.
+            services.AddAuthentication(TestAuthHandler.SchemeName)
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
         });
     }
 

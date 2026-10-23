@@ -11,7 +11,10 @@ namespace CarvedRockFitness.API.Controllers;
 [Authorize(Roles = "Admin")]
 [EnableRateLimiting("admin")]
 [Produces("application/json")]
-public class AdminSettingsController(RuntimeSettingsService settings, IDistributedCache cache) : ControllerBase
+public class AdminSettingsController(
+    RuntimeSettingsService settings,
+    AppSettingsStore settingsStore,
+    IDistributedCache cache) : ControllerBase
 {
     [HttpGet("demo-visible")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -20,13 +23,14 @@ public class AdminSettingsController(RuntimeSettingsService settings, IDistribut
 
     [HttpPost("demo-visible/toggle")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ToggleDemoVisible()
+    public async Task<IActionResult> ToggleDemoVisible(CancellationToken ct)
     {
         settings.DemoSuggestionsVisible = !settings.DemoSuggestionsVisible;
+        await settingsStore.SetBoolAsync(RuntimeSettingsService.DemoSuggestionsVisibleKey, settings.DemoSuggestionsVisible, ct);
 
         // Clear cached suggestion pages so the feed reflects the change immediately
         for (int i = 1; i <= 10; i++)
-            await cache.RemoveAsync($"suggestions_page_{i}");
+            await cache.RemoveAsync($"suggestions_page_{i}", ct);
 
         return Ok(new { demoVisible = settings.DemoSuggestionsVisible });
     }

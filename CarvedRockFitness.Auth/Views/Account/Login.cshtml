@@ -44,14 +44,6 @@
                 </div>
             </form>
 
-            <!-- Demo accounts hidden for production -->
-            <div class="demo-creds mb-4" style="display:none;">
-                <div class="demo-label"><i class="bi bi-info-circle me-1"></i>Demo Accounts</div>
-                <div class="demo-row"><span>Admin</span><strong>admin@gymmeetups.co.za / Admin@123</strong></div>
-                <div class="demo-row"><span>Premium</span><strong>paid@gymmeetups.co.za / Paid@123</strong></div>
-                <div class="demo-row"><span>Free</span><strong>free@gymmeetups.co.za / Free@123</strong></div>
-            </div>
-
             <div class="text-center auth-divider">
                 Don't have an account?
                 <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" class="gym-link">Create one free</a>
