@@ -23,4 +23,8 @@ public class AcademyRegistration
 
     public bool    IsDemoData    { get; set; } = false;
     public DateTime CreatedAt    { get; set; } = DateTime.UtcNow;
+
+    // POPIA: records that the registering parent/guardian consented to the processing of their
+    // and their child's personal information at the time of registration.
+    public DateTime? ConsentGivenAt { get; set; }
 }

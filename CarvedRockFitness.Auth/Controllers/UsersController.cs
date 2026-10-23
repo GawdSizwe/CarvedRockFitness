@@ -9,7 +9,8 @@ namespace CarvedRockFitness.Auth.Controllers;
 
 [ApiController]
 [Route("api/users")]
-[Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
+[IgnoreAntiforgeryToken] // Bearer-token API — no ambient cookies, so CSRF doesn't apply
+[Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme, Roles = "Admin")]
 public class UsersController(UserManager<ApplicationUser> userManager) : ControllerBase
 {
     [HttpGet]

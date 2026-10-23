@@ -7,6 +7,20 @@ namespace CarvedRockFitness.Web.Services;
 
 public class ApiService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor, ILogger<ApiService> logger)
 {
+    // Forwards the browser's real IP (as seen by the Fly edge) so the API's per-client
+    // rate limiters key on the actual end user rather than this Web instance's own address.
+    private void ForwardClientIp(HttpClient client)
+    {
+        var ctx = httpContextAccessor.HttpContext;
+        var clientIp = ctx?.Request.Headers["Fly-Client-IP"].FirstOrDefault()
+                     ?? ctx?.Connection.RemoteIpAddress?.ToString();
+        if (!string.IsNullOrEmpty(clientIp))
+        {
+            client.DefaultRequestHeaders.Remove("Fly-Client-IP");
+            client.DefaultRequestHeaders.Add("Fly-Client-IP", clientIp);
+        }
+    }
+
     private async Task<HttpClient> GetAuthClientAsync()
     {
         var client = httpClientFactory.CreateClient("AuthApi");
@@ -14,12 +28,14 @@ public class ApiService(IHttpClientFactory httpClientFactory, IHttpContextAccess
         var token = ctx != null ? await ctx.GetTokenAsync("access_token") : null;
         if (!string.IsNullOrEmpty(token))
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        ForwardClientIp(client);
         return client;
     }
 
     private async Task<HttpClient> GetClientAsync()
     {
         var client = httpClientFactory.CreateClient("GymApi");
+        ForwardClientIp(client);
         var ctx = httpContextAccessor.HttpContext;
         if (ctx == null)
         {
@@ -395,7 +411,7 @@ public record AcademyStatsDto(int TotalPlayers, int ActivePlayers, int SportsOff
 
 public record AcademyRegisterDto(
     string PlayerName, int Age, string Sport,
-    string ParentName, string ParentEmail, string ParentPhone,
+    string ParentName, string ParentEmail, string ParentPhone, bool ConsentGiven,
     bool NeedsTransport = false, string? PickupAddress = null, string? Notes = null);
 
 public record AcademyRegistrationDto(

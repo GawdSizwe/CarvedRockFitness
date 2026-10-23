@@ -39,7 +39,7 @@ public class MustTrainRoutineOwnerHandler(CarvedRockFitnessDbContext carvedRockF
         }
 
         var routine = await _carvedRockFitnessDbContext.Routines.Include(r => r.User).ThenInclude(u => u.Trainer).FirstOrDefaultAsync(r => r.Id == routineId);
-        if (routine == null || routine.User.TrainerId != userId || routine.User.Role != requirement.TraineeRoleName || routine.User.Trainer?.Role != requirement.TrainerRoleName)
+        if (routine?.User == null || routine.User.TrainerId != userId || routine.User.Role != requirement.TraineeRoleName || routine.User.Trainer?.Role != requirement.TrainerRoleName)
         {
             logger.LogWarning("User {UserId} does not own routine {RoutineId}", userId, routineId);
             context.Fail();

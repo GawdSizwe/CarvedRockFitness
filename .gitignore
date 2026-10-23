@@ -72,3 +72,6 @@ ApplicationInsights.config
 # LibMan
 libman.json
 wwwroot/lib/
+
+# Local SQLite demo databases (dev-only)
+**/*-demo.db*

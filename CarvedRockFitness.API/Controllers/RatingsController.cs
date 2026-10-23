@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace CarvedRockFitness.API.Controllers;
 
@@ -178,5 +179,13 @@ public class RatingsController(
     }
 }
 
-public record RateDriverRequest(int Stars, string? ReviewerName = null, string? Comment = null);
-public record AcademyReviewRequest(int Stars, string? ReviewerName = null, string? ReviewerRole = null, string? Comment = null);
+public record RateDriverRequest(
+    [property: Range(1, 5)] int Stars,
+    [property: StringLength(100)] string? ReviewerName = null,
+    [property: StringLength(2000)] string? Comment = null);
+
+public record AcademyReviewRequest(
+    [property: Range(1, 5)] int Stars,
+    [property: StringLength(100)] string? ReviewerName = null,
+    [property: StringLength(60)] string? ReviewerRole = null,
+    [property: StringLength(2000)] string? Comment = null);

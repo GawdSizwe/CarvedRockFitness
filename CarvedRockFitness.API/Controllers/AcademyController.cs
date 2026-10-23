@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace CarvedRockFitness.API.Controllers;
 
@@ -50,6 +51,9 @@ public class AcademyController(
     [EnableRateLimiting("academy-register")]
     public async Task<IActionResult> Register([FromBody] AcademyRegisterRequest request, CancellationToken ct)
     {
+        if (!request.ConsentGiven)
+            return BadRequest("Consent to process the player's and parent/guardian's information is required.");
+
         var reg = new AcademyRegistration
         {
             PlayerName     = request.PlayerName,
@@ -62,7 +66,8 @@ public class AcademyController(
             PickupAddress  = request.PickupAddress,
             Notes          = request.Notes,
             Status         = "Pending",
-            CreatedAt      = DateTime.UtcNow
+            CreatedAt      = DateTime.UtcNow,
+            ConsentGivenAt = DateTime.UtcNow
         };
 
         db.AcademyRegistrations.Add(reg);
@@ -108,8 +113,17 @@ public class AcademyController(
 }
 
 public record AcademyRegisterRequest(
-    string PlayerName, int Age, string Sport,
-    string ParentName, string ParentEmail, string ParentPhone,
-    bool NeedsTransport = false, string? PickupAddress = null, string? Notes = null);
+    [property: Required, StringLength(150, MinimumLength = 1)] string PlayerName,
+    [property: Range(3, 25)] int Age,
+    [property: Required, StringLength(80)] string Sport,
+    [property: Required, StringLength(150, MinimumLength = 1)] string ParentName,
+    [property: Required, EmailAddress, StringLength(254)] string ParentEmail,
+    [property: Required, Phone, StringLength(40)] string ParentPhone,
+    bool ConsentGiven,
+    bool NeedsTransport = false,
+    [property: StringLength(300)] string? PickupAddress = null,
+    [property: StringLength(2000)] string? Notes = null);
 
-public record UpdateStatusRequest(string Status, string? AssignedRoute = null);
+public record UpdateStatusRequest(
+    [property: Required, StringLength(40)] string Status,
+    [property: StringLength(150)] string? AssignedRoute = null);

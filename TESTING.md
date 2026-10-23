@@ -2,12 +2,23 @@
 
 ## Overview
 
-The solution includes **26 automated tests** organized into two test projects:
+The solution includes **57 automated tests** organized into two test projects:
 
 | Project | Type | Tests | Purpose |
 |---------|------|-------|---------|
-| `CarvedRockFitness.API.Tests` | Unit Tests | 19 | Test individual components in isolation |
+| `CarvedRockFitness.API.Tests` | Unit Tests | 50 | Test individual components in isolation (services, controllers, PayFast signing, authorization handlers) |
 | `CarvedRockFitness.API.IntegrationTests` | Integration Tests | 7 | Test full HTTP request/response pipeline |
+
+CI runs both projects on every push/PR via `.github/workflows/ci.yml` (GitHub Actions, `dotnet test`).
+
+Integration tests authenticate every request as an Admin using a `TestAuthHandler` fake scheme
+registered in `CustomWebApplicationFactory` — this replaces the real JWT bearer scheme so tests
+can exercise `[Authorize(Roles = "Admin")]` endpoints without a real OpenIddict-issued token.
+
+The `CarvedRockFitness.API.Tests/Authorization` folder covers the routine-ownership authorization
+handlers directly (owner access, non-owner denial, assigned-trainer access, and the
+"owner-or-trainer" `EitherRequirementHandler` combinator) using `AuthorizationHandlerContext`
+without needing a full HTTP pipeline.
 
 ---
 
@@ -53,10 +64,14 @@ Unit tests use **mocking** to isolate the component under test. Dependencies are
 ```
 CarvedRockFitness.API.Tests/
 ├── Services/
-│   ├── UserServiceTests.cs      (7 tests)
-│   └── RoutineServiceTests.cs   (5 tests)
-└── Controllers/
-    └── UsersControllerTests.cs  (6 tests)
+│   ├── UserServiceTests.cs       (7 tests)
+│   ├── RoutineServiceTests.cs    (5 tests)
+│   └── PayFastServiceTests.cs    (signature/amount-formatting tests, culture-invariant)
+├── Controllers/
+│   ├── UsersControllerTests.cs       (6 tests)
+│   └── SuggestionsControllerTests.cs (feed ordering, hidden/demo filters, pin/hide/boost, CRUD)
+└── Authorization/
+    └── RoutineAuthorizationHandlerTests.cs  (MustOwnRoutineHandler, MustTrainRoutineOwnerHandler, EitherRequirementHandler)
 ```
 
 ### Service Tests Pattern

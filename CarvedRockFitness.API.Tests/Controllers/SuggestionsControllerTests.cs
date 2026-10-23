@@ -1,11 +1,11 @@
 using CarvedRockFitness.API.Controllers;
 using CarvedRockFitness.API.DbContexts;
 using CarvedRockFitness.API.Entities;
+using CarvedRockFitness.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CarvedRockFitness.API.Tests.Controllers;
@@ -35,16 +35,10 @@ public class SuggestionsControllerTests : IDisposable
         _cacheMock.Setup(c => c.RemoveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                   .Returns(Task.CompletedTask);
 
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["SeedData:DemoSuggestionsVisible"] = "true"
-            })
-            .Build();
-
+        var settings = new RuntimeSettingsService { DemoSuggestionsVisible = true };
         var logger = new Mock<ILogger<SuggestionsController>>().Object;
 
-        _sut = new SuggestionsController(_db, _cacheMock.Object, config, logger);
+        _sut = new SuggestionsController(_db, _cacheMock.Object, settings, logger);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────
@@ -61,14 +55,14 @@ public class SuggestionsControllerTests : IDisposable
     }
 
     private Suggestion SeedSuggestion(int id, string title, bool isHidden = false,
-        bool isPinned = false, int priority = 0, bool isDemoData = false, int userId = 1)
+        bool isPinned = false, int priority = 0, bool isDemoData = false)
     {
         var s = new Suggestion
         {
             Id = id, Title = title, Description = "desc", Category = "Football",
             Location = "Soweto", CreatedAt = DateTime.UtcNow.AddMinutes(-id),
             IsHidden = isHidden, IsPinned = isPinned, Priority = priority,
-            IsDemoData = isDemoData, UserId = userId
+            IsDemoData = isDemoData
         };
         _db.Suggestions.Add(s);
         return s;
@@ -119,14 +113,9 @@ public class SuggestionsControllerTests : IDisposable
         SeedSuggestion(2, "Demo Listing", isDemoData: true);
         await _db.SaveChangesAsync();
 
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["SeedData:DemoSuggestionsVisible"] = "false"
-            })
-            .Build();
+        var hiddenSettings = new RuntimeSettingsService { DemoSuggestionsVisible = false };
         var sut = new SuggestionsController(
-            _db, _cacheMock.Object, config,
+            _db, _cacheMock.Object, hiddenSettings,
             new Mock<ILogger<SuggestionsController>>().Object);
 
         var result = await sut.GetSuggestions(1) as ContentResult;

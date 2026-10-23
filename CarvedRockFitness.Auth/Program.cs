@@ -1,6 +1,7 @@
 using CarvedRockFitness.Auth.Data;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
 using Serilog;
@@ -8,6 +9,7 @@ using Serilog.Events;
 using Serilog.Formatting.Compact;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.RateLimiting;
 
 // ── Serilog bootstrap ──────────────────────────────────────────────────────
 Log.Logger = new LoggerConfiguration()
@@ -25,7 +27,40 @@ Log.Logger = new LoggerConfiguration()
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Require a valid antiforgery token on every unsafe (POST/PUT/DELETE) request by default
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
+});
+
+// Rate-limit the login form and OIDC token endpoint to slow down credential stuffing / brute force
+builder.Services.AddRateLimiter(options =>
+{
+    static string GetIp(HttpContext ctx) =>
+        ctx.Request.Headers["Fly-Client-IP"].FirstOrDefault()
+        ?? ctx.Connection.RemoteIpAddress?.ToString()
+        ?? "anon";
+
+    options.AddPolicy("auth-write", context => RateLimitPartition.GetSlidingWindowLimiter(
+        GetIp(context),
+        _ => new SlidingWindowRateLimiterOptions
+        {
+            PermitLimit = 10, Window = TimeSpan.FromMinutes(5),
+            SegmentsPerWindow = 5, QueueLimit = 0
+        }));
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+// Resolves the Postgres SSL mode from DB_SSL_MODE (or Database:SslMode config), defaulting to
+// "Prefer" — i.e. encrypt when the server supports it, rather than always disabling TLS.
+static Npgsql.SslMode ResolveSslMode(IConfiguration configuration)
+{
+    var raw = Environment.GetEnvironmentVariable("DB_SSL_MODE") ?? configuration["Database:SslMode"];
+    return !string.IsNullOrEmpty(raw) && Enum.TryParse<Npgsql.SslMode>(raw, true, out var parsed)
+        ? parsed
+        : Npgsql.SslMode.Prefer;
+}
 
 // EF Core + Identity
 var pgConnAuth = Environment.GetEnvironmentVariable("DATABASE_URL_AUTH");
@@ -43,7 +78,7 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
             Username = userInfo[0],
             Password = userInfo.Length > 1 ? userInfo[1] : "",
             Database = uri.AbsolutePath.TrimStart('/'),
-            SslMode = Npgsql.SslMode.Disable
+            SslMode = ResolveSslMode(builder.Configuration)
         };
         options.UseNpgsql(npgsql.ToString());
     }
@@ -62,6 +97,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireUppercase       = true;
     options.Password.RequireLowercase       = true;
     options.Password.RequiredUniqueChars    = 4;
+
+    // Lock an account out after repeated failed attempts to slow down password guessing
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<AuthDbContext>()
 .AddDefaultTokenProviders();
@@ -119,7 +159,14 @@ builder.Services.AddOpenIddict()
 
         // RSA signing — load from file, auto-generate on first boot, or use dev ephemeral keys
         var certPath     = builder.Configuration["Auth:SigningCertPath"] ?? "/certs/signing.pfx";
-        var certPassword = Environment.GetEnvironmentVariable("SIGNING_CERT_PASSWORD") ?? "GymMeetupsAuth!";
+        var certPassword = Environment.GetEnvironmentVariable("SIGNING_CERT_PASSWORD");
+        if (string.IsNullOrEmpty(certPassword))
+        {
+            if (!builder.Environment.IsDevelopment())
+                throw new InvalidOperationException(
+                    "SIGNING_CERT_PASSWORD must be set in non-Development environments.");
+            certPassword = "GymMeetupsAuth-Dev-Only!";
+        }
         if (!File.Exists(certPath) && Directory.Exists(Path.GetDirectoryName(certPath)!))
         {
             // First boot in production — generate and persist a self-signed RSA cert
@@ -177,31 +224,37 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
-    // ── Seed test users ──────────────────────────────────────────────────────
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-    var testUsers = new[]
+    // ── Seed test users — local development only, never in Staging/Production ──
+    if (app.Environment.IsDevelopment())
     {
-        new { FullName = "Admin User",   Email = "admin@gymmeetups.co.za",   Password = "Admin@123",  Role = "Admin",    IsPaidUser = true  },
-        new { FullName = "Paid Member",  Email = "paid@gymmeetups.co.za",    Password = "Paid@123",   Role = "PaidUser", IsPaidUser = true  },
-        new { FullName = "Free Member",  Email = "free@gymmeetups.co.za",    Password = "Free@123",   Role = "FreeUser", IsPaidUser = false },
-    };
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    foreach (var seed in testUsers)
-    {
-        if (await userManager.FindByEmailAsync(seed.Email) == null)
+        var testUsers = new[]
         {
-            var user = new ApplicationUser
+            new { FullName = "Admin User",   Email = "admin@gymmeetups.local",   Password = Guid.NewGuid().ToString("N") + "Aa1!", Role = "Admin",    IsPaidUser = true  },
+            new { FullName = "Paid Member",  Email = "paid@gymmeetups.local",    Password = Guid.NewGuid().ToString("N") + "Aa1!", Role = "PaidUser", IsPaidUser = true  },
+            new { FullName = "Free Member",  Email = "free@gymmeetups.local",    Password = Guid.NewGuid().ToString("N") + "Aa1!", Role = "FreeUser", IsPaidUser = false },
+        };
+
+        foreach (var seed in testUsers)
+        {
+            if (await userManager.FindByEmailAsync(seed.Email) == null)
             {
-                FullName   = seed.FullName,
-                UserName   = seed.Email,
-                Email      = seed.Email,
-                IsPaidUser = seed.IsPaidUser,
-                EmailConfirmed = true
-            };
-            var result = await userManager.CreateAsync(user, seed.Password);
-            if (result.Succeeded)
-                await userManager.AddToRoleAsync(user, seed.Role);
+                var user = new ApplicationUser
+                {
+                    FullName   = seed.FullName,
+                    UserName   = seed.Email,
+                    Email      = seed.Email,
+                    IsPaidUser = seed.IsPaidUser,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(user, seed.Password);
+                if (result.Succeeded)
+                    await userManager.AddToRoleAsync(user, seed.Role);
+                Log.Information("Dev seed: created {Email} with a random password (see logs only in Development)", seed.Email);
+                if (result.Succeeded)
+                    Log.Information("Dev seed password for {Email}: {Password}", seed.Email, seed.Password);
+            }
         }
     }
 
@@ -267,7 +320,26 @@ app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
+
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; " +
+        "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net fonts.googleapis.com unpkg.com; " +
+        "font-src 'self' cdn.jsdelivr.net fonts.gstatic.com; " +
+        "img-src 'self' data:; " +
+        "frame-ancestors 'none'";
+    await next();
+});
+
 app.UseStaticFiles();
 app.UseRouting();
 
@@ -276,6 +348,7 @@ app.UseSerilogRequestLogging(options =>
     options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
 });
 
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
